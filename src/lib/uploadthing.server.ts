@@ -8,7 +8,7 @@ const f = createUploadthing();
 
 export const uploadRouter = {
 	mealImage: f({
-		image: { maxFileSize: "8MB", maxFileCount: 1 },
+		image: { maxFileSize: "8MB", maxFileCount: 5 },
 	}).onUploadComplete(async ({ file }) => {
 		return { url: file.ufsUrl, key: file.key };
 	}),

@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { DisplayControls } from "#/components/display-controls";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
@@ -38,6 +39,9 @@ function RegisterPage() {
 
 	return (
 		<main className="flex min-h-dvh flex-col justify-center gap-8 px-6 pb-16">
+			<div className="absolute top-[calc(env(safe-area-inset-top)+1rem)] right-4">
+				<DisplayControls showImageToggle={false} />
+			</div>
 			<div className="text-center">
 				<p className="font-semibold text-5xl text-primary">Bocado</p>
 				<p className="mt-2 text-muted-foreground">Crea tu cuenta</p>

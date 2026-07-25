@@ -45,7 +45,7 @@ pnpm check       # Biome
 ## Modelo de datos (PocketBase)
 
 - `users` — colección auth estándar (+ `name`).
-- `meals` — `user`, `description`, `photo_url`, `photo_key`, `meal_type`
+- `meals` — `user`, `description`, `photo_url`, `photo_key`, `photos`, `meal_type`
   (desayuno/almuerzo/comida/merienda/cena/snack), `eaten_at`. Reglas: cada
   usuario solo ve/edita lo suyo.
 - `share_links` — `user`, `token` (único), `active`. La ruta pública
@@ -84,6 +84,5 @@ Configuración de referencia:
 
 ## PWA
 
-La app incluye manifest + service worker (`vite-plugin-pwa`). En el móvil:
-*Compartir → Añadir a pantalla de inicio*. Los iconos de `public/pwa-*.png`
-son placeholders — sustitúyelos por el logo real (192, 512 y apple-touch 180).
+La app incluye manifest, service worker, favicons e iconos de instalación. En el
+móvil: *Compartir → Añadir a pantalla de inicio*.

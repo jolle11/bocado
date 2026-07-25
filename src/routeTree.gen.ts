@@ -14,10 +14,13 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAjustesRouteImport } from './routes/_app/ajustes'
+import { Route as AppCalendarioRouteImport } from './routes/_app/calendario'
 import { Route as AppHistorialRouteImport } from './routes/_app/historial'
 import { Route as AppNuevaRouteImport } from './routes/_app/nueva'
+import { Route as AppSemanaRouteImport } from './routes/_app/semana'
 import { Route as ApiUploadthingRouteImport } from './routes/api/uploadthing'
 import { Route as ShareTokenRouteImport } from './routes/share.$token'
+import { Route as AppEditarMealIdRouteImport } from './routes/_app/editar.$mealId'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -43,6 +46,11 @@ const AppAjustesRoute = AppAjustesRouteImport.update({
   path: '/ajustes',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCalendarioRoute = AppCalendarioRouteImport.update({
+  id: '/calendario',
+  path: '/calendario',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppHistorialRoute = AppHistorialRouteImport.update({
   id: '/historial',
   path: '/historial',
@@ -51,6 +59,11 @@ const AppHistorialRoute = AppHistorialRouteImport.update({
 const AppNuevaRoute = AppNuevaRouteImport.update({
   id: '/nueva',
   path: '/nueva',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSemanaRoute = AppSemanaRouteImport.update({
+  id: '/semana',
+  path: '/semana',
   getParentRoute: () => AppRoute,
 } as any)
 const ApiUploadthingRoute = ApiUploadthingRouteImport.update({
@@ -63,26 +76,37 @@ const ShareTokenRoute = ShareTokenRouteImport.update({
   path: '/share/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppEditarMealIdRoute = AppEditarMealIdRouteImport.update({
+  id: '/editar/$mealId',
+  path: '/editar/$mealId',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/ajustes': typeof AppAjustesRoute
+  '/calendario': typeof AppCalendarioRoute
   '/historial': typeof AppHistorialRoute
   '/nueva': typeof AppNuevaRoute
+  '/semana': typeof AppSemanaRoute
   '/api/uploadthing': typeof ApiUploadthingRoute
   '/share/$token': typeof ShareTokenRoute
+  '/editar/$mealId': typeof AppEditarMealIdRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/ajustes': typeof AppAjustesRoute
+  '/calendario': typeof AppCalendarioRoute
   '/historial': typeof AppHistorialRoute
   '/nueva': typeof AppNuevaRoute
+  '/semana': typeof AppSemanaRoute
   '/api/uploadthing': typeof ApiUploadthingRoute
   '/share/$token': typeof ShareTokenRoute
   '/': typeof AppIndexRoute
+  '/editar/$mealId': typeof AppEditarMealIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -90,11 +114,14 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/_app/ajustes': typeof AppAjustesRoute
+  '/_app/calendario': typeof AppCalendarioRoute
   '/_app/historial': typeof AppHistorialRoute
   '/_app/nueva': typeof AppNuevaRoute
+  '/_app/semana': typeof AppSemanaRoute
   '/api/uploadthing': typeof ApiUploadthingRoute
   '/share/$token': typeof ShareTokenRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/editar/$mealId': typeof AppEditarMealIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -103,31 +130,40 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/ajustes'
+    | '/calendario'
     | '/historial'
     | '/nueva'
+    | '/semana'
     | '/api/uploadthing'
     | '/share/$token'
+    | '/editar/$mealId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
     | '/register'
     | '/ajustes'
+    | '/calendario'
     | '/historial'
     | '/nueva'
+    | '/semana'
     | '/api/uploadthing'
     | '/share/$token'
     | '/'
+    | '/editar/$mealId'
   id:
     | '__root__'
     | '/_app'
     | '/login'
     | '/register'
     | '/_app/ajustes'
+    | '/_app/calendario'
     | '/_app/historial'
     | '/_app/nueva'
+    | '/_app/semana'
     | '/api/uploadthing'
     | '/share/$token'
     | '/_app/'
+    | '/_app/editar/$mealId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -175,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAjustesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/calendario': {
+      id: '/_app/calendario'
+      path: '/calendario'
+      fullPath: '/calendario'
+      preLoaderRoute: typeof AppCalendarioRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/historial': {
       id: '/_app/historial'
       path: '/historial'
@@ -187,6 +230,13 @@ declare module '@tanstack/react-router' {
       path: '/nueva'
       fullPath: '/nueva'
       preLoaderRoute: typeof AppNuevaRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/semana': {
+      id: '/_app/semana'
+      path: '/semana'
+      fullPath: '/semana'
+      preLoaderRoute: typeof AppSemanaRouteImport
       parentRoute: typeof AppRoute
     }
     '/api/uploadthing': {
@@ -203,21 +253,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShareTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/editar/$mealId': {
+      id: '/_app/editar/$mealId'
+      path: '/editar/$mealId'
+      fullPath: '/editar/$mealId'
+      preLoaderRoute: typeof AppEditarMealIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
   AppAjustesRoute: typeof AppAjustesRoute
+  AppCalendarioRoute: typeof AppCalendarioRoute
   AppHistorialRoute: typeof AppHistorialRoute
   AppNuevaRoute: typeof AppNuevaRoute
+  AppSemanaRoute: typeof AppSemanaRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppEditarMealIdRoute: typeof AppEditarMealIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppAjustesRoute: AppAjustesRoute,
+  AppCalendarioRoute: AppCalendarioRoute,
   AppHistorialRoute: AppHistorialRoute,
   AppNuevaRoute: AppNuevaRoute,
+  AppSemanaRoute: AppSemanaRoute,
   AppIndexRoute: AppIndexRoute,
+  AppEditarMealIdRoute: AppEditarMealIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

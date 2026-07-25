@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
 
-const email = `e2e-${Date.now()}@test.local`;
 const password = "supersegura123";
 
-test("registro, añadir comida y compartir", async ({ page }) => {
+test("registro, añadir comida y compartir", async ({ page }, testInfo) => {
+	const email = `e2e-${testInfo.project.name}-${Date.now()}@test.local`;
 	await page.goto("/register");
 	await page.waitForLoadState("networkidle");
 	await page.getByLabel("Nombre").fill("E2E");
@@ -12,14 +12,67 @@ test("registro, añadir comida y compartir", async ({ page }) => {
 	await page.getByRole("button", { name: "Crear cuenta" }).click();
 
 	await expect(page.getByText("Hola, E2E")).toBeVisible();
+	await expect(
+		page.getByRole("button", { name: "Ocultar imágenes" }),
+	).toBeVisible();
+	await page.getByRole("button", { name: "Activar tema oscuro" }).click();
+	await expect(page.locator("html")).toHaveClass(/dark/);
+	await page.getByRole("button", { name: "Activar tema claro" }).click();
+	await expect(page.locator("html")).not.toHaveClass(/dark/);
+	const addMealLink = page
+		.getByRole("link", { name: "Añadir comida" })
+		.first();
+	await expect
+		.poll(async () => {
+			const colors = await addMealLink.evaluate((element) => {
+				const expected = document.createElement("span");
+				expected.style.color = "var(--primary-foreground)";
+				element.append(expected);
+				const values = {
+					actual: getComputedStyle(element).color,
+					expected: getComputedStyle(expected).color,
+				};
+				expected.remove();
+				return values;
+			});
+			return colors.actual === colors.expected;
+		})
+		.toBe(true);
 
-	await page.getByRole("link", { name: "Añadir comida" }).first().click();
+	await addMealLink.click();
 	await page.getByLabel("¿Qué has comido?").fill("Tostada con aguacate");
 	await page.getByRole("button", { name: "Guardar comida" }).click();
 
 	await expect(page.getByText("Tostada con aguacate")).toBeVisible();
 
+	await page.getByRole("link", { name: "Editar comida" }).click();
+	await page
+		.getByLabel("¿Qué has comido?")
+		.fill("Tostada con aguacate y tomate");
+	await page.getByRole("button", { name: "Guardar cambios" }).click();
+	await expect(page.getByText("Tostada con aguacate y tomate")).toBeVisible();
+
+	await page.getByRole("link", { name: "Diario" }).click();
+	await page.getByRole("link", { name: "Semana" }).click();
+	await expect(page.getByText("Tostada con aguacate y tomate")).toBeVisible();
+	await page.getByRole("link", { name: "Calendario" }).click();
+	await expect(page.getByText("Tostada con aguacate y tomate")).toBeVisible();
+
 	await page.getByRole("link", { name: "Ajustes" }).click();
+	await page.getByRole("button", { name: "Lavanda" }).click();
+	await expect(page.locator("html")).toHaveClass(/theme-lavender/);
+	await page.getByRole("button", { name: "Activar tema oscuro" }).click();
+	await expect(page.locator("html")).toHaveClass(/theme-lavender/);
+	await expect(page.locator("html")).toHaveClass(/dark/);
+	await page.getByRole("button", { name: "Activar tema claro" }).click();
+	await expect(page.locator("html")).toHaveClass(/theme-lavender/);
+	await expect(page.locator("html")).not.toHaveClass(/dark/);
+	await page
+		.getByRole("button", { name: "Las fotos están visibles" })
+		.click();
+	await expect(
+		page.getByRole("button", { name: "Las fotos están ocultas" }),
+	).toBeVisible();
 	await page
 		.getByRole("button", { name: "Crear enlace para compartir" })
 		.click();
@@ -31,5 +84,5 @@ test("registro, añadir comida y compartir", async ({ page }) => {
 
 	await page.goto(`/share/${token}`);
 	await expect(page.getByText("Diario de E2E")).toBeVisible();
-	await expect(page.getByText("Tostada con aguacate")).toBeVisible();
+	await expect(page.getByText("Tostada con aguacate y tomate")).toBeVisible();
 });

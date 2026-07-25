@@ -31,6 +31,30 @@ export function useMealHistory() {
 	});
 }
 
+export function useMealsInRange(fromDate: Date, toDate: Date) {
+	const from = pbDate(startOfDay(fromDate));
+	const to = pbDate(endOfDay(toDate));
+	return useQuery({
+		queryKey: ["meals", "range", from, to],
+		queryFn: () =>
+			pb.collection("meals").getFullList<Meal>({
+				filter: pb.filter("eaten_at >= {:from} && eaten_at <= {:to}", {
+					from,
+					to,
+				}),
+				sort: "eaten_at",
+			}),
+	});
+}
+
+export function useMeal(id: string) {
+	return useQuery({
+		queryKey: ["meals", "detail", id],
+		queryFn: () => pb.collection("meals").getOne<Meal>(id),
+		enabled: Boolean(id),
+	});
+}
+
 export function useCreateMeal() {
 	const queryClient = useQueryClient();
 	return useMutation({
@@ -39,6 +63,18 @@ export function useCreateMeal() {
 				...data,
 				eaten_at: pbDate(new Date(data.eaten_at)),
 				user: pb.authStore.record?.id,
+			}),
+		onSuccess: () => queryClient.invalidateQueries({ queryKey: ["meals"] }),
+	});
+}
+
+export function useUpdateMeal() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({ id, data }: { id: string; data: MealForm }) =>
+			pb.collection("meals").update<Meal>(id, {
+				...data,
+				eaten_at: pbDate(new Date(data.eaten_at)),
 			}),
 		onSuccess: () => queryClient.invalidateQueries({ queryKey: ["meals"] }),
 	});

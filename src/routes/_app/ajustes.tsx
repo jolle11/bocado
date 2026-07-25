@@ -1,9 +1,25 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Check, Copy, Link as LinkIcon, LogOut, Trash2 } from "lucide-react";
+import {
+	Check,
+	Copy,
+	Eye,
+	EyeOff,
+	Link as LinkIcon,
+	LogOut,
+	Moon,
+	Palette,
+	Sun,
+	Trash2,
+} from "lucide-react";
 import { useState } from "react";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent } from "#/components/ui/card";
 import { logout, useAuth } from "#/lib/auth";
+import {
+	THEME_PALETTES,
+	useImagePreference,
+	useTheme,
+} from "#/lib/preferences";
 import {
 	useCreateShareLink,
 	useDeleteShareLink,
@@ -21,6 +37,8 @@ function SettingsPage() {
 	const createLink = useCreateShareLink();
 	const deleteLink = useDeleteShareLink();
 	const [copied, setCopied] = useState<string | null>(null);
+	const { palette, mode, setPalette, setMode } = useTheme();
+	const { showImages, setShowImages } = useImagePreference();
 
 	async function copy(token: string) {
 		await navigator.clipboard.writeText(
@@ -36,6 +54,78 @@ function SettingsPage() {
 				<h1 className="font-semibold text-2xl">Ajustes</h1>
 				<p className="text-muted-foreground text-sm">{user?.email}</p>
 			</header>
+
+			<section className="flex flex-col gap-3">
+				<div className="flex items-center gap-2">
+					<Palette className="size-4 text-muted-foreground" />
+					<h2 className="font-medium">Apariencia</h2>
+				</div>
+				<div className="grid grid-cols-4 gap-2">
+					{THEME_PALETTES.map((option) => (
+						<button
+							key={option.id}
+							type="button"
+							onClick={() => setPalette(option.id)}
+							className={`flex flex-col items-center gap-2 rounded-xl border p-2 text-xs ${
+								palette === option.id
+									? "border-primary bg-primary/10 text-primary"
+									: "border-border text-muted-foreground"
+							}`}
+						>
+							<span
+								className="size-7 rounded-full border border-black/10 shadow-sm"
+								style={{ backgroundColor: option.swatch }}
+							/>
+							{option.label}
+						</button>
+					))}
+				</div>
+				<div className="grid grid-cols-2 rounded-xl bg-muted p-1">
+					<button
+						type="button"
+						onClick={() => setMode("light")}
+						className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm ${
+							mode === "light"
+								? "bg-card font-medium text-foreground shadow-sm"
+								: "text-muted-foreground"
+						}`}
+					>
+						<Sun className="size-4" /> Claro
+					</button>
+					<button
+						type="button"
+						onClick={() => setMode("dark")}
+						className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm ${
+							mode === "dark"
+								? "bg-card font-medium text-foreground shadow-sm"
+								: "text-muted-foreground"
+						}`}
+					>
+						<Moon className="size-4" /> Oscuro
+					</button>
+				</div>
+			</section>
+
+			<section className="flex flex-col gap-3">
+				<div>
+					<h2 className="font-medium">Fotos en el diario</h2>
+					<p className="text-muted-foreground text-sm">
+						Ocúltalas para ver más comidas a la vez. No se borrará ninguna.
+					</p>
+				</div>
+				<Button
+					variant="outline"
+					onClick={() => setShowImages(!showImages)}
+					className="justify-start"
+				>
+					{showImages ? (
+						<Eye className="size-4" />
+					) : (
+						<EyeOff className="size-4" />
+					)}
+					{showImages ? "Las fotos están visibles" : "Las fotos están ocultas"}
+				</Button>
+			</section>
 
 			<section className="flex flex-col gap-3">
 				<div>

@@ -5,8 +5,9 @@ import {
 	redirect,
 	useNavigate,
 } from "@tanstack/react-router";
-import { History, Plus, Settings, UtensilsCrossed } from "lucide-react";
+import { CalendarDays, Plus, Settings, UtensilsCrossed } from "lucide-react";
 import { useEffect } from "react";
+import { DisplayControls } from "#/components/display-controls";
 import { useAuth } from "#/lib/auth";
 import { pb } from "#/lib/pocketbase";
 
@@ -34,6 +35,9 @@ function AppLayout() {
 	return (
 		<div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col">
 			<main className="flex-1 px-4 pt-4 pb-28">
+				<div className="mb-2 flex justify-end">
+					<DisplayControls />
+				</div>
 				<Outlet />
 			</main>
 			<nav className="fixed inset-x-0 bottom-0 border-border border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
@@ -54,8 +58,8 @@ function AppLayout() {
 					</Link>
 					<NavItem
 						to="/historial"
-						icon={<History className="size-5" />}
-						label="Historial"
+						icon={<CalendarDays className="size-5" />}
+						label="Diario"
 					/>
 					<NavItem
 						to="/ajustes"

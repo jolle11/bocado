@@ -9,6 +9,7 @@ function meal(id: string, eaten_at: string): Meal {
 		description: "test",
 		photo_url: "",
 		photo_key: "",
+		photos: [],
 		meal_type: "comida",
 		eaten_at,
 		created: eaten_at,

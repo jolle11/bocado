@@ -29,9 +29,17 @@ export const mealFormSchema = z.object({
 	eaten_at: z.string().min(1, "Falta la hora"),
 	photo_url: z.string(),
 	photo_key: z.string(),
+	photos: z
+		.array(z.object({ url: z.string().url(), key: z.string() }))
+		.max(5, "Máximo 5 fotos"),
 });
 
 export type MealForm = z.infer<typeof mealFormSchema>;
+
+export interface MealPhoto {
+	url: string;
+	key: string;
+}
 
 export interface Meal {
 	id: string;
@@ -39,6 +47,7 @@ export interface Meal {
 	description: string;
 	photo_url: string;
 	photo_key: string;
+	photos?: MealPhoto[];
 	meal_type: MealType;
 	eaten_at: string;
 	created: string;

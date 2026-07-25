@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { DiaryTabs } from "#/components/diary-tabs";
 import { MealCard } from "#/components/meal-card";
 import { useDeleteMeal, useMealHistory } from "#/lib/queries";
 import type { Meal } from "#/lib/types";
@@ -27,8 +28,9 @@ function HistoryPage() {
 	return (
 		<div className="flex flex-col gap-6">
 			<header className="pt-2">
-				<h1 className="font-semibold text-2xl">Historial</h1>
+				<h1 className="font-semibold text-2xl">Diario</h1>
 			</header>
+			<DiaryTabs />
 
 			{isLoading && <p className="text-muted-foreground text-sm">Cargando…</p>}
 

@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { useEffect } from "react";
+import { applyTheme, readThemePreference } from "#/lib/preferences";
 
 import appCss from "../styles.css?url";
 
@@ -31,7 +32,7 @@ export const Route = createRootRouteWithContext<{
 			},
 			{
 				name: "theme-color",
-				content: "#0c0a09",
+				content: "#e7f3ec",
 			},
 			{
 				name: "apple-mobile-web-app-capable",
@@ -39,7 +40,35 @@ export const Route = createRootRouteWithContext<{
 			},
 			{
 				name: "apple-mobile-web-app-status-bar-style",
-				content: "black-translucent",
+				content: "default",
+			},
+			{
+				name: "application-name",
+				content: "Bocado",
+			},
+			{
+				name: "mobile-web-app-capable",
+				content: "yes",
+			},
+			{
+				property: "og:type",
+				content: "website",
+			},
+			{
+				property: "og:title",
+				content: "Bocado",
+			},
+			{
+				property: "og:description",
+				content: "Diario de comidas para compartir con tu nutricionista",
+			},
+			{
+				property: "og:image",
+				content: "/logo512.png",
+			},
+			{
+				name: "twitter:card",
+				content: "summary",
 			},
 		],
 		links: [
@@ -53,7 +82,25 @@ export const Route = createRootRouteWithContext<{
 			},
 			{
 				rel: "apple-touch-icon",
+				sizes: "180x180",
 				href: "/apple-touch-icon.png",
+			},
+			{
+				rel: "icon",
+				type: "image/png",
+				sizes: "32x32",
+				href: "/favicon-32.png",
+			},
+			{
+				rel: "icon",
+				type: "image/png",
+				sizes: "16x16",
+				href: "/favicon-16.png",
+			},
+			{
+				rel: "icon",
+				type: "image/x-icon",
+				href: "/favicon.ico",
 			},
 		],
 	}),
@@ -62,13 +109,14 @@ export const Route = createRootRouteWithContext<{
 
 function RootDocument({ children }: { children: React.ReactNode }) {
 	useEffect(() => {
+		applyTheme(readThemePreference());
 		if ("serviceWorker" in navigator && import.meta.env.PROD) {
 			navigator.serviceWorker.register("/sw.js");
 		}
 	}, []);
 
 	return (
-		<html lang="es" className="dark">
+		<html lang="es">
 			<head>
 				<HeadContent />
 			</head>

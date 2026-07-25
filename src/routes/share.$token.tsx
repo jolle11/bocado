@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { DisplayControls } from "#/components/display-controls";
 import { MealCard } from "#/components/meal-card";
 import { getSharedMeals } from "#/lib/share-fn";
 import { groupByDay } from "#/routes/_app/historial";
@@ -15,17 +16,25 @@ function SharePage() {
 
 	if (!data.found) {
 		return (
-			<main className="mx-auto flex min-h-dvh max-w-lg flex-col items-center justify-center gap-2 px-6 text-center">
-				<h1 className="font-semibold text-2xl">Enlace no válido</h1>
-				<p className="text-muted-foreground">
-					Este enlace no existe o ha sido revocado.
-				</p>
+			<main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-4 py-6">
+				<div className="flex justify-end">
+					<DisplayControls />
+				</div>
+				<div className="flex flex-1 flex-col items-center justify-center gap-2 px-2 text-center">
+					<h1 className="font-semibold text-2xl">Enlace no válido</h1>
+					<p className="text-muted-foreground">
+						Este enlace no existe o ha sido revocado.
+					</p>
+				</div>
 			</main>
 		);
 	}
 
 	return (
 		<main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col gap-6 px-4 py-6">
+			<div className="flex justify-end">
+				<DisplayControls />
+			</div>
 			<header>
 				<p className="font-semibold text-primary text-sm">Bocado</p>
 				<h1 className="font-semibold text-2xl">

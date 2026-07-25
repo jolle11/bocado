@@ -1,8 +1,24 @@
 // Service worker mínimo: hace la app instalable y cachea estáticos.
 // Estrategia: network-first para navegación, cache-first para assets.
-const CACHE = "bocado-v1";
+const CACHE = "bocado-v2";
+const CORE_ASSETS = [
+	"/",
+	"/manifest.webmanifest",
+	"/favicon.ico",
+	"/favicon-32.png",
+	"/apple-touch-icon.png",
+	"/logo192.png",
+	"/logo512.png",
+];
 
-self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("install", (event) => {
+	event.waitUntil(
+		caches
+			.open(CACHE)
+			.then((cache) => cache.addAll(CORE_ASSETS))
+			.then(() => self.skipWaiting()),
+	);
+});
 
 self.addEventListener("activate", (event) => {
 	event.waitUntil(
@@ -40,7 +56,15 @@ self.addEventListener("fetch", (event) => {
 
 	if (request.mode === "navigate") {
 		event.respondWith(
-			fetch(request).catch(() => caches.match(request).then((c) => c || caches.match("/"))),
+			fetch(request)
+				.then((response) => {
+					const copy = response.clone();
+					caches.open(CACHE).then((cache) => cache.put(request, copy));
+					return response;
+				})
+				.catch(() =>
+					caches.match(request).then((cached) => cached || caches.match("/")),
+				),
 		);
 	}
 });

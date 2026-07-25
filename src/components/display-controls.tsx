@@ -7,8 +7,8 @@ export function DisplayControls({
 	showImageToggle?: boolean;
 }) {
 	const { showImages, setShowImages } = useImagePreference();
-	const { mode, setMode } = useTheme();
-	const isDark = mode === "dark";
+	const { resolvedMode, setMode } = useTheme();
+	const isDark = resolvedMode === "dark";
 
 	return (
 		<fieldset className="flex items-center gap-1 rounded-full border border-border bg-card/90 p-1 shadow-sm backdrop-blur">

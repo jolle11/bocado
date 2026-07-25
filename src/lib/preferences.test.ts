@@ -1,8 +1,13 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { applyTheme, readThemePreference } from "./preferences";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	applyTheme,
+	readThemePreference,
+	resolveThemeMode,
+} from "./preferences";
 
 describe("preferencias de tema", () => {
 	beforeEach(() => {
+		vi.unstubAllGlobals();
 		localStorage.clear();
 		document.documentElement.className = "";
 	});
@@ -21,6 +26,22 @@ describe("preferencias de tema", () => {
 			palette: "sunset",
 			mode: "light",
 		});
+	});
+
+	it("usa el tema del dispositivo por defecto", () => {
+		expect(readThemePreference()).toEqual({
+			palette: "default",
+			mode: "system",
+		});
+	});
+
+	it("resuelve el modo automático según el dispositivo", () => {
+		vi.stubGlobal(
+			"matchMedia",
+			vi.fn(() => ({ matches: true }) as MediaQueryList),
+		);
+
+		expect(resolveThemeMode("system")).toBe("dark");
 	});
 
 	it("combina de forma independiente paleta y modo", () => {

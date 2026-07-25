@@ -109,10 +109,14 @@ export const Route = createRootRouteWithContext<{
 
 function RootDocument({ children }: { children: React.ReactNode }) {
 	useEffect(() => {
-		applyTheme(readThemePreference());
+		const syncTheme = () => applyTheme(readThemePreference());
+		const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
+		syncTheme();
+		systemTheme.addEventListener("change", syncTheme);
 		if ("serviceWorker" in navigator && import.meta.env.PROD) {
 			navigator.serviceWorker.register("/sw.js");
 		}
+		return () => systemTheme.removeEventListener("change", syncTheme);
 	}, []);
 
 	return (

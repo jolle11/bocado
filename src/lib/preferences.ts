@@ -8,7 +8,8 @@ export const THEME_PALETTES = [
 ] as const;
 
 export type ThemePalette = (typeof THEME_PALETTES)[number]["id"];
-export type ThemeMode = "light" | "dark";
+export type ThemeMode = "system" | "light" | "dark";
+export type ResolvedThemeMode = Exclude<ThemeMode, "system">;
 
 export interface ThemePreference {
 	palette: ThemePalette;
@@ -21,7 +22,7 @@ const MODE_KEY = "bocado-theme-mode";
 const IMAGES_KEY = "bocado-show-images";
 const PREFERENCE_EVENT = "bocado-preferences";
 
-const THEME_COLORS: Record<ThemePalette, Record<ThemeMode, string>> = {
+const THEME_COLORS: Record<ThemePalette, Record<ResolvedThemeMode, string>> = {
 	default: { light: "#e7f3ec", dark: "#0a1418" },
 	forest: { light: "#dcebdc", dark: "#0d1710" },
 	sunset: { light: "#f5ded0", dark: "#1c100d" },
@@ -33,7 +34,14 @@ function isPalette(value: string | null): value is ThemePalette {
 }
 
 function isMode(value: string | null): value is ThemeMode {
-	return value === "light" || value === "dark";
+	return value === "system" || value === "light" || value === "dark";
+}
+
+export function resolveThemeMode(mode: ThemeMode): ResolvedThemeMode {
+	if (mode !== "system") return mode;
+	return window.matchMedia?.("(prefers-color-scheme: dark)").matches
+		? "dark"
+		: "light";
 }
 
 export function readThemePreference(): ThemePreference {
@@ -49,7 +57,7 @@ export function readThemePreference(): ThemePreference {
 			? { palette: "default", mode: "dark" }
 			: isPalette(legacy) && legacy !== "default"
 				? { palette: legacy, mode: "light" }
-				: { palette: "default", mode: "light" };
+				: { palette: "default", mode: "system" };
 
 	localStorage.setItem(PALETTE_KEY, preference.palette);
 	localStorage.setItem(MODE_KEY, preference.mode);
@@ -57,6 +65,7 @@ export function readThemePreference(): ThemePreference {
 }
 
 export function applyTheme({ palette, mode }: ThemePreference) {
+	const resolvedMode = resolveThemeMode(mode);
 	document.documentElement.classList.remove(
 		"dark",
 		"theme-forest",
@@ -66,10 +75,11 @@ export function applyTheme({ palette, mode }: ThemePreference) {
 	if (palette !== "default") {
 		document.documentElement.classList.add(`theme-${palette}`);
 	}
-	if (mode === "dark") document.documentElement.classList.add("dark");
+	if (resolvedMode === "dark") document.documentElement.classList.add("dark");
+	document.documentElement.style.colorScheme = resolvedMode;
 	document
 		.querySelector('meta[name="theme-color"]')
-		?.setAttribute("content", THEME_COLORS[palette][mode]);
+		?.setAttribute("content", THEME_COLORS[palette][resolvedMode]);
 }
 
 function saveTheme(preference: ThemePreference) {
@@ -82,7 +92,7 @@ function saveTheme(preference: ThemePreference) {
 export function useTheme() {
 	const [preference, setPreference] = useState<ThemePreference>({
 		palette: "default",
-		mode: "light",
+		mode: "system",
 	});
 
 	useEffect(() => {
@@ -93,7 +103,12 @@ export function useTheme() {
 		};
 		sync();
 		window.addEventListener(PREFERENCE_EVENT, sync);
-		return () => window.removeEventListener(PREFERENCE_EVENT, sync);
+		const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
+		systemTheme.addEventListener("change", sync);
+		return () => {
+			window.removeEventListener(PREFERENCE_EVENT, sync);
+			systemTheme.removeEventListener("change", sync);
+		};
 	}, []);
 
 	function setPalette(palette: ThemePalette) {
@@ -104,7 +119,12 @@ export function useTheme() {
 		saveTheme({ ...preference, mode });
 	}
 
-	return { ...preference, setPalette, setMode };
+	return {
+		...preference,
+		resolvedMode: resolveThemeMode(preference.mode),
+		setPalette,
+		setMode,
+	};
 }
 
 export function useImagePreference() {

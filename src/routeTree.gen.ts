@@ -19,6 +19,7 @@ import { Route as AppHistorialRouteImport } from './routes/_app/historial'
 import { Route as AppNuevaRouteImport } from './routes/_app/nueva'
 import { Route as AppSemanaRouteImport } from './routes/_app/semana'
 import { Route as ApiUploadthingRouteImport } from './routes/api/uploadthing'
+import { Route as ApiUploadthingFilesRouteImport } from './routes/api/uploadthing-files'
 import { Route as ShareTokenRouteImport } from './routes/share.$token'
 import { Route as AppEditarMealIdRouteImport } from './routes/_app/editar.$mealId'
 
@@ -71,6 +72,11 @@ const ApiUploadthingRoute = ApiUploadthingRouteImport.update({
   path: '/api/uploadthing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiUploadthingFilesRoute = ApiUploadthingFilesRouteImport.update({
+  id: '/api/uploadthing-files',
+  path: '/api/uploadthing-files',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShareTokenRoute = ShareTokenRouteImport.update({
   id: '/share/$token',
   path: '/share/$token',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/nueva': typeof AppNuevaRoute
   '/semana': typeof AppSemanaRoute
   '/api/uploadthing': typeof ApiUploadthingRoute
+  '/api/uploadthing-files': typeof ApiUploadthingFilesRoute
   '/share/$token': typeof ShareTokenRoute
   '/editar/$mealId': typeof AppEditarMealIdRoute
 }
@@ -104,6 +111,7 @@ export interface FileRoutesByTo {
   '/nueva': typeof AppNuevaRoute
   '/semana': typeof AppSemanaRoute
   '/api/uploadthing': typeof ApiUploadthingRoute
+  '/api/uploadthing-files': typeof ApiUploadthingFilesRoute
   '/share/$token': typeof ShareTokenRoute
   '/': typeof AppIndexRoute
   '/editar/$mealId': typeof AppEditarMealIdRoute
@@ -119,6 +127,7 @@ export interface FileRoutesById {
   '/_app/nueva': typeof AppNuevaRoute
   '/_app/semana': typeof AppSemanaRoute
   '/api/uploadthing': typeof ApiUploadthingRoute
+  '/api/uploadthing-files': typeof ApiUploadthingFilesRoute
   '/share/$token': typeof ShareTokenRoute
   '/_app/': typeof AppIndexRoute
   '/_app/editar/$mealId': typeof AppEditarMealIdRoute
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/nueva'
     | '/semana'
     | '/api/uploadthing'
+    | '/api/uploadthing-files'
     | '/share/$token'
     | '/editar/$mealId'
   fileRoutesByTo: FileRoutesByTo
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/nueva'
     | '/semana'
     | '/api/uploadthing'
+    | '/api/uploadthing-files'
     | '/share/$token'
     | '/'
     | '/editar/$mealId'
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/_app/nueva'
     | '/_app/semana'
     | '/api/uploadthing'
+    | '/api/uploadthing-files'
     | '/share/$token'
     | '/_app/'
     | '/_app/editar/$mealId'
@@ -171,6 +183,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   ApiUploadthingRoute: typeof ApiUploadthingRoute
+  ApiUploadthingFilesRoute: typeof ApiUploadthingFilesRoute
   ShareTokenRoute: typeof ShareTokenRoute
 }
 
@@ -246,6 +259,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUploadthingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/uploadthing-files': {
+      id: '/api/uploadthing-files'
+      path: '/api/uploadthing-files'
+      fullPath: '/api/uploadthing-files'
+      preLoaderRoute: typeof ApiUploadthingFilesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/share/$token': {
       id: '/share/$token'
       path: '/share/$token'
@@ -290,6 +310,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   ApiUploadthingRoute: ApiUploadthingRoute,
+  ApiUploadthingFilesRoute: ApiUploadthingFilesRoute,
   ShareTokenRoute: ShareTokenRoute,
 }
 export const routeTree = rootRouteImport

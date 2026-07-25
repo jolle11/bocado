@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { endOfDay, startOfDay } from "date-fns";
 import { pb } from "./pocketbase";
 import type { Meal, MealForm, ShareLink } from "./types";
+import { deleteUploadthingFiles } from "./uploadthing-files";
 
 function pbDate(d: Date) {
 	return d.toISOString().replace("T", " ");
@@ -83,7 +84,17 @@ export function useUpdateMeal() {
 export function useDeleteMeal() {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (id: string) => pb.collection("meals").delete(id),
+		mutationFn: async (id: string) => {
+			const meal = await pb.collection("meals").getOne<Meal>(id);
+			await pb.collection("meals").delete(id);
+
+			const keys = meal.photos?.length
+				? meal.photos.map((photo) => photo.key)
+				: [meal.photo_key];
+			await deleteUploadthingFiles(keys).catch((cleanupError) => {
+				console.error("Could not delete meal photos", cleanupError);
+			});
+		},
 		onSuccess: () => queryClient.invalidateQueries({ queryKey: ["meals"] }),
 	});
 }

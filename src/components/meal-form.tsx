@@ -5,6 +5,7 @@ import { Button } from "#/components/ui/button";
 import { Label } from "#/components/ui/label";
 import { Textarea } from "#/components/ui/textarea";
 import { optimizeImage } from "#/lib/optimize-image";
+import { pb } from "#/lib/pocketbase";
 import {
 	MEAL_TYPE_LABELS,
 	MEAL_TYPES,
@@ -13,6 +14,7 @@ import {
 	mealFormSchema,
 } from "#/lib/types";
 import { useUploadThing } from "#/lib/uploadthing";
+import { deleteUploadthingFiles } from "#/lib/uploadthing-files";
 
 export function MealForm({
 	initialValues,
@@ -23,7 +25,11 @@ export function MealForm({
 	submitLabel: string;
 	onSubmit: (values: MealFormValues) => Promise<void>;
 }) {
-	const { startUpload, isUploading } = useUploadThing("mealImage");
+	const { startUpload, isUploading } = useUploadThing("mealImage", {
+		headers: () => ({
+			Authorization: `Bearer ${pb.authStore.token}`,
+		}),
+	});
 	const [existingPhotos, setExistingPhotos] = useState<MealPhoto[]>(
 		initialValues.photos,
 	);
@@ -47,6 +53,7 @@ export function MealForm({
 		onSubmit: async ({ value }) => {
 			setError(null);
 			setIsSaving(true);
+			let uploadedKeys: string[] = [];
 			try {
 				let uploaded: MealPhoto[] = [];
 				if (files.length > 0) {
@@ -58,6 +65,7 @@ export function MealForm({
 						url: file.ufsUrl,
 						key: file.key,
 					}));
+					uploadedKeys = uploaded.map((photo) => photo.key);
 				}
 				const photos = [...existingPhotos, ...uploaded];
 				await onSubmit({
@@ -66,7 +74,18 @@ export function MealForm({
 					photo_url: photos[0]?.url ?? "",
 					photo_key: photos[0]?.key ?? "",
 				});
+
+				const keptKeys = new Set(photos.map((photo) => photo.key));
+				const removedKeys = initialValues.photos
+					.map((photo) => photo.key)
+					.filter((key) => key && !keptKeys.has(key));
+				await deleteUploadthingFiles(removedKeys).catch((cleanupError) => {
+					console.error("Could not delete removed photos", cleanupError);
+				});
 			} catch {
+				await deleteUploadthingFiles(uploadedKeys).catch((cleanupError) => {
+					console.error("Could not clean up failed uploads", cleanupError);
+				});
 				setError(
 					"No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.",
 				);

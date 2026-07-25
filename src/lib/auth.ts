@@ -1,5 +1,5 @@
 import type { AuthRecord } from "pocketbase";
-import { useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { pb } from "./pocketbase";
 
 // pb.authStore.record devuelve un objeto nuevo en cada lectura (parsea
@@ -23,9 +23,16 @@ function subscribe(callback: () => void) {
 
 export function useAuth() {
 	const record = useSyncExternalStore(subscribe, getSnapshot, () => null);
+	const [isReady, setIsReady] = useState(false);
+
+	useEffect(() => {
+		setIsReady(true);
+	}, []);
+
 	return {
 		user: record,
 		isLoggedIn: record !== null,
+		isReady,
 	};
 }
 

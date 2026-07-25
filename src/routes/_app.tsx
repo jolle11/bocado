@@ -21,16 +21,16 @@ export const Route = createFileRoute("/_app")({
 });
 
 function AppLayout() {
-	const { isLoggedIn } = useAuth();
+	const { isLoggedIn, isReady } = useAuth();
 	const navigate = useNavigate();
 
 	useEffect(() => {
-		if (!isLoggedIn) {
+		if (isReady && !isLoggedIn) {
 			navigate({ to: "/login" });
 		}
-	}, [isLoggedIn, navigate]);
+	}, [isLoggedIn, isReady, navigate]);
 
-	if (!isLoggedIn) return null;
+	if (!isReady || !isLoggedIn) return null;
 
 	return (
 		<div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col">

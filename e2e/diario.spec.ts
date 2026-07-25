@@ -12,6 +12,9 @@ test("registro, añadir comida y compartir", async ({ page }, testInfo) => {
 	await page.getByRole("button", { name: "Crear cuenta" }).click();
 
 	await expect(page.getByText("Hola, E2E")).toBeVisible();
+	await page.reload();
+	await expect(page).toHaveURL("/");
+	await expect(page.getByText("Hola, E2E")).toBeVisible();
 	await expect(
 		page.getByRole("button", { name: "Ocultar imágenes" }),
 	).toBeVisible();

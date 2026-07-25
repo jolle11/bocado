@@ -1,0 +1,8 @@
+node_modules
+.output
+dist
+test-results
+playwright-report
+.env
+pb/pb_data
+pb/pocketbase

@@ -12,10 +12,11 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'mobile', use: { ...devices['iPhone 14'] } },
+    { name: 'mobile', use: { ...devices['Pixel 7'] } },
   ],
   webServer: {
     command: 'pnpm dev',
+    env: { VITE_E2E: '1' },
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
   },

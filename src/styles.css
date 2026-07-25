@@ -345,3 +345,12 @@ a {
     color: var(--foreground);
   }
 }
+
+/* Acento ámbar estilo Zero */
+.dark {
+  --background: oklch(0.16 0.01 260);
+  --card: oklch(0.21 0.012 260);
+  --primary: oklch(0.82 0.16 80);
+  --primary-foreground: oklch(0.2 0.03 80);
+  --ring: oklch(0.82 0.16 80);
+}

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "#/components/ui/button";
 import { Label } from "#/components/ui/label";
 import { Textarea } from "#/components/ui/textarea";
+import { optimizeImage } from "#/lib/optimize-image";
 import {
 	MEAL_TYPE_LABELS,
 	MEAL_TYPES,
@@ -29,6 +30,7 @@ export function MealForm({
 	const [files, setFiles] = useState<File[]>([]);
 	const [previews, setPreviews] = useState<string[]>([]);
 	const [error, setError] = useState<string | null>(null);
+	const [isOptimizing, setIsOptimizing] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const fileInput = useRef<HTMLInputElement>(null);
 
@@ -76,15 +78,25 @@ export function MealForm({
 
 	const photoCount = existingPhotos.length + files.length;
 
-	function addFiles(event: React.ChangeEvent<HTMLInputElement>) {
+	async function addFiles(event: React.ChangeEvent<HTMLInputElement>) {
 		const picked = [...(event.target.files ?? [])].slice(0, 5 - photoCount);
-		if (picked.length === 0) return;
-		setFiles((current) => [...current, ...picked]);
-		setPreviews((current) => [
-			...current,
-			...picked.map((file) => URL.createObjectURL(file)),
-		]);
 		event.target.value = "";
+		if (picked.length === 0) return;
+
+		setIsOptimizing(true);
+		setError(null);
+		try {
+			const optimized = await Promise.all(picked.map(optimizeImage));
+			setFiles((current) => [...current, ...optimized]);
+			setPreviews((current) => [
+				...current,
+				...optimized.map((file) => URL.createObjectURL(file)),
+			]);
+		} catch {
+			setError("No se pudieron preparar las fotos. Inténtalo de nuevo.");
+		} finally {
+			setIsOptimizing(false);
+		}
 	}
 
 	function removeNewPhoto(index: number) {
@@ -93,7 +105,7 @@ export function MealForm({
 		setPreviews((current) => current.filter((_, i) => i !== index));
 	}
 
-	const busy = isUploading || isSaving;
+	const busy = isOptimizing || isUploading || isSaving;
 
 	return (
 		<form
@@ -133,8 +145,9 @@ export function MealForm({
 				{photoCount < 5 && (
 					<button
 						type="button"
+						disabled={busy}
 						onClick={() => fileInput.current?.click()}
-						className="flex min-h-28 w-full flex-col items-center justify-center gap-2 rounded-xl border border-border border-dashed text-muted-foreground hover:bg-accent/50"
+						className="flex min-h-28 w-full flex-col items-center justify-center gap-2 rounded-xl border border-border border-dashed text-muted-foreground hover:bg-accent/50 disabled:opacity-50"
 					>
 						{photoCount === 0 ? (
 							<Camera className="size-7" />
@@ -142,9 +155,11 @@ export function MealForm({
 							<ImagePlus className="size-7" />
 						)}
 						<span className="text-sm">
-							{photoCount === 0
-								? "Hacer fotos o elegir de la galería"
-								: "Añadir más fotos"}
+							{isOptimizing
+								? "Optimizando fotos…"
+								: photoCount === 0
+									? "Hacer fotos o elegir de la galería"
+									: "Añadir más fotos"}
 						</span>
 					</button>
 				)}

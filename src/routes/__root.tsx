@@ -123,6 +123,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 		<html lang="es">
 			<head>
 				<HeadContent />
+				<script
+					defer
+					src="https://umamis.up.railway.app/script.js"
+					data-website-id="2f8b3cc5-bc96-4c3f-b736-199008aca20b"
+				/>
 			</head>
 			<body>
 				{children}

@@ -87,7 +87,7 @@ function SettingsPage() {
 							key={option.id}
 							type="button"
 							onClick={() => setPalette(option.id)}
-							className={`flex flex-col items-center gap-2 rounded-xl border p-2 text-xs ${
+							className={`flex min-w-0 flex-col items-center gap-2 rounded-xl border p-2 text-xs ${
 								palette === option.id
 									? "border-primary bg-primary/10 text-primary"
 									: "border-border text-muted-foreground"
@@ -97,7 +97,9 @@ function SettingsPage() {
 								className="size-7 rounded-full border border-black/10 shadow-sm"
 								style={{ backgroundColor: option.swatch }}
 							/>
-							{option.label}
+							<span className="w-full min-w-0 [overflow-wrap:anywhere] text-center leading-tight">
+								{option.label}
+							</span>
 						</button>
 					))}
 				</div>

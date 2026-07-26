@@ -62,6 +62,16 @@ test("registro, añadir comida y compartir", async ({ page }, testInfo) => {
 	await expect(page.getByText("Tostada con aguacate y tomate")).toBeVisible();
 
 	await page.getByRole("link", { name: "Ajustes" }).click();
+	const defaultThemeButton = page.getByRole("button", {
+		name: "Predeterminado",
+	});
+	await expect
+		.poll(() =>
+			defaultThemeButton.evaluate(
+				(button) => button.scrollWidth <= button.clientWidth,
+			),
+		)
+		.toBe(true);
 	await page.getByRole("button", { name: "Lavanda" }).click();
 	await expect(page.locator("html")).toHaveClass(/theme-lavender/);
 	await page.getByRole("button", { name: "Activar tema oscuro" }).click();

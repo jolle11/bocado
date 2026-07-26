@@ -61,10 +61,7 @@ export function MealForm({
 					if (!result || result.length !== files.length) {
 						throw new Error("upload failed");
 					}
-					uploaded = result.map((file) => ({
-						url: file.ufsUrl,
-						key: file.key,
-					}));
+					uploaded = result.map((file) => file.serverData);
 					uploadedKeys = uploaded.map((photo) => photo.key);
 				}
 				const photos = [...existingPhotos, ...uploaded];

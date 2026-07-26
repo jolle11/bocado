@@ -65,6 +65,24 @@ test("registro, añadir comida y compartir", async ({ page }, testInfo) => {
 	const defaultThemeButton = page.getByRole("button", {
 		name: "Predeterminado",
 	});
+	const themeButtons = page.getByRole("button", {
+		name: /^(Predeterminado|Bosque|Atardecer|Lavanda)$/,
+	});
+	const themeButtonPositions = await themeButtons.evaluateAll((buttons) =>
+		buttons.map((button) => {
+			const { x, y } = button.getBoundingClientRect();
+			return { x, y };
+		}),
+	);
+	if ((page.viewportSize()?.width ?? 0) < 640) {
+		expect(themeButtonPositions[0].y).toBe(themeButtonPositions[1].y);
+		expect(themeButtonPositions[2].y).toBe(themeButtonPositions[3].y);
+		expect(themeButtonPositions[2].y).toBeGreaterThan(
+			themeButtonPositions[0].y,
+		);
+	} else {
+		expect(new Set(themeButtonPositions.map(({ y }) => y)).size).toBe(1);
+	}
 	await expect
 		.poll(() =>
 			defaultThemeButton.evaluate(

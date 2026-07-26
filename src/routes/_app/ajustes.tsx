@@ -81,7 +81,7 @@ function SettingsPage() {
 					<Palette className="size-4 text-muted-foreground" />
 					<h2 className="font-medium">Apariencia</h2>
 				</div>
-				<div className="grid grid-cols-4 gap-2">
+				<div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
 					{THEME_PALETTES.map((option) => (
 						<button
 							key={option.id}
@@ -97,7 +97,7 @@ function SettingsPage() {
 								className="size-7 rounded-full border border-black/10 shadow-sm"
 								style={{ backgroundColor: option.swatch }}
 							/>
-							<span className="w-full min-w-0 [overflow-wrap:anywhere] text-center leading-tight">
+							<span className="w-full min-w-0 whitespace-nowrap text-center leading-tight">
 								{option.label}
 							</span>
 						</button>

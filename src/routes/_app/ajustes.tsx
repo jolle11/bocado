@@ -1,5 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { addDays, endOfDay, format } from "date-fns";
+import { es } from "date-fns/locale";
 import {
+	CalendarClock,
 	Check,
 	Copy,
 	Eye,
@@ -15,6 +18,8 @@ import {
 import { useState } from "react";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent } from "#/components/ui/card";
+import { Input } from "#/components/ui/input";
+import { Label } from "#/components/ui/label";
 import { logout, useAuth } from "#/lib/auth";
 import {
 	THEME_PALETTES,
@@ -38,6 +43,10 @@ function SettingsPage() {
 	const createLink = useCreateShareLink();
 	const deleteLink = useDeleteShareLink();
 	const [copied, setCopied] = useState<string | null>(null);
+	const [duration, setDuration] = useState<
+		"day" | "week" | "forever" | "custom"
+	>("week");
+	const [customDate, setCustomDate] = useState("");
 	const { palette, mode, setPalette, setMode } = useTheme();
 	const { showImages, setShowImages } = useImagePreference();
 
@@ -48,6 +57,17 @@ function SettingsPage() {
 		setCopied(token);
 		setTimeout(() => setCopied(null), 2000);
 	}
+
+	function createShareLink() {
+		let expiresAt: Date | null = null;
+		if (duration === "day") expiresAt = addDays(new Date(), 1);
+		if (duration === "week") expiresAt = addDays(new Date(), 7);
+		if (duration === "custom")
+			expiresAt = endOfDay(new Date(`${customDate}T00:00:00`));
+		createLink.mutate(expiresAt);
+	}
+
+	const minimumCustomDate = format(addDays(new Date(), 1), "yyyy-MM-dd");
 
 	return (
 		<div className="flex flex-col gap-6">
@@ -152,9 +172,18 @@ function SettingsPage() {
 					<Card key={link.id} className="py-0">
 						<CardContent className="flex items-center gap-2 p-3">
 							<LinkIcon className="size-4 shrink-0 text-muted-foreground" />
-							<code className="min-w-0 flex-1 truncate text-xs">
-								/share/{link.token}
-							</code>
+							<div className="min-w-0 flex-1">
+								<code className="block truncate text-xs">
+									/share/{link.token}
+								</code>
+								<p className="mt-1 text-muted-foreground text-xs">
+									{link.expires_at
+										? new Date(link.expires_at) <= new Date()
+											? "Caducado"
+											: `Caduca ${format(new Date(link.expires_at), "d MMM yyyy, HH:mm", { locale: es })}`
+										: "No caduca"}
+								</p>
+							</div>
 							<Button
 								variant="ghost"
 								size="icon"
@@ -179,12 +208,59 @@ function SettingsPage() {
 					</Card>
 				))}
 
+				<div className="flex flex-col gap-2">
+					<Label>Duración del nuevo enlace</Label>
+					<div className="grid grid-cols-2 gap-2">
+						{[
+							{ value: "day", label: "1 día" },
+							{ value: "week", label: "1 semana" },
+							{ value: "forever", label: "Indefinido" },
+							{ value: "custom", label: "Fecha concreta" },
+						].map((option) => (
+							<button
+								key={option.value}
+								type="button"
+								onClick={() =>
+									setDuration(
+										option.value as "day" | "week" | "forever" | "custom",
+									)
+								}
+								className={`rounded-xl border px-3 py-2 text-sm ${
+									duration === option.value
+										? "border-primary bg-primary/10 font-medium text-primary"
+										: "border-border text-muted-foreground"
+								}`}
+							>
+								{option.label}
+							</button>
+						))}
+					</div>
+				</div>
+
+				{duration === "custom" && (
+					<div className="flex flex-col gap-2">
+						<Label htmlFor="share-expiry">Disponible hasta</Label>
+						<Input
+							id="share-expiry"
+							type="date"
+							min={minimumCustomDate}
+							value={customDate}
+							onChange={(event) => setCustomDate(event.target.value)}
+						/>
+						<p className="text-muted-foreground text-xs">
+							El enlace caducará al terminar ese día.
+						</p>
+					</div>
+				)}
+
 				<Button
 					variant="outline"
-					onClick={() => createLink.mutate()}
-					disabled={createLink.isPending}
+					onClick={createShareLink}
+					disabled={
+						createLink.isPending || (duration === "custom" && !customDate)
+					}
 				>
-					<LinkIcon className="size-4" /> Crear enlace para compartir
+					<CalendarClock className="size-4" /> Crear enlace para compartir
 				</Button>
 			</section>
 

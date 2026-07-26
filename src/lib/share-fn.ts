@@ -35,6 +35,10 @@ export const getSharedMeals = createServerFn({ method: "GET" })
 			return { found: false as const };
 		}
 
+		if (link.expires_at && new Date(link.expires_at).getTime() <= Date.now()) {
+			return { found: false as const, expired: true as const };
+		}
+
 		const meals = await pb.collection("meals").getFullList<Meal>({
 			filter: pb.filter("user = {:user}", { user: link.user }),
 			sort: "-eaten_at",

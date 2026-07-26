@@ -59,5 +59,6 @@ export interface ShareLink {
 	user: string;
 	token: string;
 	active: boolean;
+	expires_at?: string;
 	created: string;
 }

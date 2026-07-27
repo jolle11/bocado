@@ -48,7 +48,7 @@ function AppLayout() {
 						label="Hoy"
 					/>
 					<Link
-						to="/nueva"
+						to="/new"
 						className="justify-self-center"
 						aria-label="Añadir comida"
 					>
@@ -57,12 +57,12 @@ function AppLayout() {
 						</span>
 					</Link>
 					<NavItem
-						to="/historial"
+						to="/history"
 						icon={<CalendarDays className="size-5" />}
 						label="Diario"
 					/>
 					<NavItem
-						to="/ajustes"
+						to="/settings"
 						icon={<Settings className="size-5" />}
 						label="Ajustes"
 					/>

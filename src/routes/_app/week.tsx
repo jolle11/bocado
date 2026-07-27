@@ -15,7 +15,7 @@ import { MealCard } from "#/components/meal-card";
 import { Button } from "#/components/ui/button";
 import { useDeleteMeal, useMealsInRange } from "#/lib/queries";
 
-export const Route = createFileRoute("/_app/semana")({
+export const Route = createFileRoute("/_app/week")({
 	component: WeekPage,
 });
 

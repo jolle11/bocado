@@ -1,9 +1,9 @@
 import { Link } from "@tanstack/react-router";
 
 const tabs = [
-	{ to: "/historial", label: "Lista" },
-	{ to: "/semana", label: "Semana" },
-	{ to: "/calendario", label: "Calendario" },
+	{ to: "/history", label: "Lista" },
+	{ to: "/week", label: "Semana" },
+	{ to: "/calendar", label: "Calendario" },
 ] as const;
 
 export function DiaryTabs() {

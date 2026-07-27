@@ -4,7 +4,7 @@ import { MealForm } from "#/components/meal-form";
 import { useCreateMeal } from "#/lib/queries";
 import type { MealType } from "#/lib/types";
 
-export const Route = createFileRoute("/_app/nueva")({ component: NewMealPage });
+export const Route = createFileRoute("/_app/new")({ component: NewMealPage });
 
 function suggestMealType(): MealType {
 	const h = new Date().getHours();

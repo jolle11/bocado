@@ -32,7 +32,7 @@ import {
 	useShareLinks,
 } from "#/lib/queries";
 
-export const Route = createFileRoute("/_app/ajustes")({
+export const Route = createFileRoute("/_app/settings")({
 	component: SettingsPage,
 });
 

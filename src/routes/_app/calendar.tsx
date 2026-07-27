@@ -19,7 +19,7 @@ import { MealCard } from "#/components/meal-card";
 import { Button } from "#/components/ui/button";
 import { useDeleteMeal, useMealsInRange } from "#/lib/queries";
 
-export const Route = createFileRoute("/_app/calendario")({
+export const Route = createFileRoute("/_app/calendar")({
 	component: CalendarPage,
 });
 

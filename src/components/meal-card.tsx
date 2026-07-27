@@ -123,7 +123,7 @@ function EntryActions({
 	return (
 		<div className="flex shrink-0 gap-1">
 			<Link
-				to="/editar/$mealId"
+				to="/edit/$mealId"
 				params={{ mealId }}
 				className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
 				aria-label="Editar entrada"

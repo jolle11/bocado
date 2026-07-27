@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { MealForm } from "#/components/meal-form";
 import { useMeal, useUpdateMeal } from "#/lib/queries";
 
-export const Route = createFileRoute("/_app/editar/$mealId")({
+export const Route = createFileRoute("/_app/edit/$mealId")({
 	component: EditMealPage,
 });
 

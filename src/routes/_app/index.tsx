@@ -34,7 +34,7 @@ function TodayPage() {
 						Aún no has registrado nada hoy
 					</p>
 					<Button asChild>
-						<Link to="/nueva">
+						<Link to="/new">
 							<Plus className="size-4" /> Añadir comida
 						</Link>
 					</Button>

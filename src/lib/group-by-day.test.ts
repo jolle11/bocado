@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { groupByDay } from "#/routes/_app/historial";
+import { groupByDay } from "#/routes/_app/history";
 import type { Meal } from "./types";
 
 function meal(id: string, eaten_at: string): Meal {

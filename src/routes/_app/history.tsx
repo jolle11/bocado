@@ -6,7 +6,7 @@ import { MealCard } from "#/components/meal-card";
 import { useDeleteMeal, useMealHistory } from "#/lib/queries";
 import type { Meal } from "#/lib/types";
 
-export const Route = createFileRoute("/_app/historial")({
+export const Route = createFileRoute("/_app/history")({
 	component: HistoryPage,
 });
 

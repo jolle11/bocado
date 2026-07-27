@@ -4,7 +4,7 @@ import { es } from "date-fns/locale";
 import { DisplayControls } from "#/components/display-controls";
 import { MealCard } from "#/components/meal-card";
 import { getSharedMeals } from "#/lib/share-fn";
-import { groupByDay } from "#/routes/_app/historial";
+import { groupByDay } from "#/routes/_app/history";
 
 export const Route = createFileRoute("/share/$token")({
 	loader: ({ params }) => getSharedMeals({ data: { token: params.token } }),

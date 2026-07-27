@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { Images, Pencil, Trash2 } from "lucide-react";
+import { Droplets, Images, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { Badge } from "#/components/ui/badge";
 import { Card, CardContent } from "#/components/ui/card";
 import { useImagePreference } from "#/lib/preferences";
@@ -19,6 +19,41 @@ export function MealCard({
 		: meal.photo_url
 			? [{ url: meal.photo_url, key: meal.photo_key }]
 			: [];
+	const entryType = meal.entry_type ?? "meal";
+
+	if (entryType !== "meal") {
+		return (
+			<Card>
+				<CardContent className="flex items-center gap-3 p-4">
+					<div
+						className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${
+							entryType === "water"
+								? "bg-sky-500/10 text-sky-600"
+								: "bg-amber-500/10 text-amber-600"
+						}`}
+					>
+						{entryType === "water" ? (
+							<Droplets className="size-5" />
+						) : (
+							<Sparkles className="size-5" />
+						)}
+					</div>
+					<div className="min-w-0 flex-1">
+						<p className="font-medium text-sm">
+							{entryType === "water"
+								? formatWater(meal.water_ml ?? 0)
+								: meal.description}
+						</p>
+						<p className="text-muted-foreground text-xs">
+							{entryType === "water" ? "Agua" : "Extra"} ·{" "}
+							{format(new Date(meal.eaten_at), "HH:mm")}
+						</p>
+					</div>
+					{onDelete && <EntryActions mealId={meal.id} onDelete={onDelete} />}
+				</CardContent>
+			</Card>
+		);
+	}
 
 	return (
 		<Card className="overflow-hidden py-0">
@@ -64,27 +99,45 @@ export function MealCard({
 					</div>
 					<p className="mt-2 whitespace-pre-wrap text-sm">{meal.description}</p>
 				</div>
-				{onDelete && (
-					<div className="flex shrink-0 gap-1">
-						<Link
-							to="/editar/$mealId"
-							params={{ mealId: meal.id }}
-							className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
-							aria-label="Editar comida"
-						>
-							<Pencil className="size-4" />
-						</Link>
-						<button
-							type="button"
-							onClick={() => onDelete(meal.id)}
-							className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-destructive"
-							aria-label="Borrar comida"
-						>
-							<Trash2 className="size-4" />
-						</button>
-					</div>
-				)}
+				{onDelete && <EntryActions mealId={meal.id} onDelete={onDelete} />}
 			</CardContent>
 		</Card>
+	);
+}
+
+function formatWater(ml: number) {
+	if (ml >= 1000) {
+		const liters = ml / 1000;
+		return `${Number.isInteger(liters) ? liters : liters.toFixed(2)} l de agua`;
+	}
+	return `${ml} ml de agua`;
+}
+
+function EntryActions({
+	mealId,
+	onDelete,
+}: {
+	mealId: string;
+	onDelete: (id: string) => void;
+}) {
+	return (
+		<div className="flex shrink-0 gap-1">
+			<Link
+				to="/editar/$mealId"
+				params={{ mealId }}
+				className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
+				aria-label="Editar entrada"
+			>
+				<Pencil className="size-4" />
+			</Link>
+			<button
+				type="button"
+				onClick={() => onDelete(mealId)}
+				className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-destructive"
+				aria-label="Borrar entrada"
+			>
+				<Trash2 className="size-4" />
+			</button>
+		</div>
 	);
 }

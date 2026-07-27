@@ -16,7 +16,7 @@ function EditMealPage() {
 	if (isLoading) return <p className="text-muted-foreground">Cargando…</p>;
 	if (isError || !meal) {
 		return (
-			<p className="text-destructive">No se ha podido cargar la comida.</p>
+			<p className="text-destructive">No se ha podido cargar la entrada.</p>
 		);
 	}
 
@@ -29,12 +29,14 @@ function EditMealPage() {
 	return (
 		<div className="flex flex-col gap-6">
 			<header className="pt-2">
-				<h1 className="font-semibold text-2xl">Editar comida</h1>
+				<h1 className="font-semibold text-2xl">Editar entrada</h1>
 			</header>
 			<MealForm
 				initialValues={{
+					entry_type: meal.entry_type ?? "meal",
 					description: meal.description,
 					meal_type: meal.meal_type,
+					water_ml: meal.water_ml ?? 250,
 					eaten_at: format(new Date(meal.eaten_at), "yyyy-MM-dd'T'HH:mm"),
 					photo_url: meal.photo_url,
 					photo_key: meal.photo_key,

@@ -1,5 +1,14 @@
 import { useForm } from "@tanstack/react-form";
-import { Camera, ImagePlus, X } from "lucide-react";
+import {
+	Camera,
+	Droplets,
+	ImagePlus,
+	Minus,
+	Plus,
+	Sparkles,
+	UtensilsCrossed,
+	X,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "#/components/ui/button";
 import { Label } from "#/components/ui/label";
@@ -7,6 +16,8 @@ import { Textarea } from "#/components/ui/textarea";
 import { optimizeImage } from "#/lib/optimize-image";
 import { pb } from "#/lib/pocketbase";
 import {
+	ENTRY_TYPE_LABELS,
+	ENTRY_TYPES,
 	MEAL_TYPE_LABELS,
 	MEAL_TYPES,
 	type MealForm as MealFormValues,
@@ -38,6 +49,7 @@ export function MealForm({
 	const [error, setError] = useState<string | null>(null);
 	const [isOptimizing, setIsOptimizing] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
+	const [entryType, setEntryType] = useState(initialValues.entry_type);
 	const fileInput = useRef<HTMLInputElement>(null);
 
 	useEffect(
@@ -56,7 +68,7 @@ export function MealForm({
 			let uploadedKeys: string[] = [];
 			try {
 				let uploaded: MealPhoto[] = [];
-				if (files.length > 0) {
+				if (value.entry_type === "meal" && files.length > 0) {
 					const result = await startUpload(files);
 					if (!result || result.length !== files.length) {
 						throw new Error("upload failed");
@@ -64,9 +76,12 @@ export function MealForm({
 					uploaded = result.map((file) => file.serverData);
 					uploadedKeys = uploaded.map((photo) => photo.key);
 				}
-				const photos = [...existingPhotos, ...uploaded];
+				const photos =
+					value.entry_type === "meal" ? [...existingPhotos, ...uploaded] : [];
 				await onSubmit({
 					...value,
+					description:
+						value.entry_type === "water" ? "Agua" : value.description.trim(),
 					photos,
 					photo_url: photos[0]?.url ?? "",
 					photo_key: photos[0]?.key ?? "",
@@ -131,110 +146,204 @@ export function MealForm({
 				form.handleSubmit();
 			}}
 		>
-			<div className="grid gap-2">
-				<div className="flex items-center justify-between">
-					<Label>Fotos</Label>
-					<span className="text-muted-foreground text-xs">{photoCount}/5</span>
-				</div>
-				{photoCount > 0 && (
-					<div className="grid grid-cols-2 gap-2">
-						{existingPhotos.map((photo, index) => (
-							<PhotoPreview
-								key={photo.key || photo.url}
-								src={photo.url}
-								onRemove={() =>
-									setExistingPhotos((current) =>
-										current.filter((_, i) => i !== index),
-									)
-								}
-							/>
-						))}
-						{previews.map((preview, index) => (
-							<PhotoPreview
-								key={preview}
-								src={preview}
-								onRemove={() => removeNewPhoto(index)}
-							/>
-						))}
-					</div>
-				)}
-				{photoCount < 5 && (
-					<button
-						type="button"
-						disabled={busy}
-						onClick={() => fileInput.current?.click()}
-						className="flex min-h-28 w-full flex-col items-center justify-center gap-2 rounded-xl border border-border border-dashed text-muted-foreground hover:bg-accent/50 disabled:opacity-50"
-					>
-						{photoCount === 0 ? (
-							<Camera className="size-7" />
-						) : (
-							<ImagePlus className="size-7" />
-						)}
-						<span className="text-sm">
-							{isOptimizing
-								? "Optimizando fotos…"
-								: photoCount === 0
-									? "Hacer fotos o elegir de la galería"
-									: "Añadir más fotos"}
-						</span>
-					</button>
-				)}
-				<input
-					ref={fileInput}
-					type="file"
-					accept="image/*"
-					multiple
-					className="hidden"
-					onChange={addFiles}
-				/>
-				<p className="text-muted-foreground text-xs">
-					Puedes añadir hasta 5 fotos por comida.
-				</p>
-			</div>
-
-			<form.Field name="meal_type">
+			<form.Field name="entry_type">
 				{(field) => (
 					<div className="grid gap-2">
-						<Label>Tipo</Label>
-						<div className="flex flex-wrap gap-2">
-							{MEAL_TYPES.map((type) => (
-								<button
-									key={type}
-									type="button"
-									onClick={() => field.handleChange(type)}
-									className={`rounded-full border px-4 py-1.5 text-sm ${
-										field.state.value === type
-											? "border-primary bg-primary text-primary-foreground"
-											: "border-border text-muted-foreground"
-									}`}
-								>
-									{MEAL_TYPE_LABELS[type]}
-								</button>
-							))}
+						<Label>¿Qué quieres añadir?</Label>
+						<div className="grid grid-cols-3 rounded-xl bg-muted p-1">
+							{ENTRY_TYPES.map((type) => {
+								const Icon =
+									type === "meal"
+										? UtensilsCrossed
+										: type === "water"
+											? Droplets
+											: Sparkles;
+								return (
+									<button
+										key={type}
+										type="button"
+										onClick={() => {
+											field.handleChange(type);
+											setEntryType(type);
+										}}
+										className={`flex items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-sm ${
+											field.state.value === type
+												? "bg-card font-medium shadow-sm"
+												: "text-muted-foreground"
+										}`}
+									>
+										<Icon className="size-4" />
+										{ENTRY_TYPE_LABELS[type]}
+									</button>
+								);
+							})}
 						</div>
 					</div>
 				)}
 			</form.Field>
 
-			<form.Field name="description">
-				{(field) => (
-					<div className="grid gap-2">
-						<Label htmlFor="description">¿Qué has comido?</Label>
-						<Textarea
-							id="description"
-							rows={4}
-							value={field.state.value}
-							onChange={(event) => field.handleChange(event.target.value)}
-							placeholder="Lentejas con verduras, una manzana…"
-						/>
-						{field.state.meta.errors[0] && (
-							<p className="text-destructive text-sm">
-								{field.state.meta.errors[0]?.message}
-							</p>
-						)}
+			{entryType === "meal" && (
+				<div className="grid gap-2">
+					<div className="flex items-center justify-between">
+						<Label>Fotos</Label>
+						<span className="text-muted-foreground text-xs">
+							{photoCount}/5
+						</span>
 					</div>
-				)}
-			</form.Field>
+					{photoCount > 0 && (
+						<div className="grid grid-cols-2 gap-2">
+							{existingPhotos.map((photo, index) => (
+								<PhotoPreview
+									key={photo.key || photo.url}
+									src={photo.url}
+									onRemove={() =>
+										setExistingPhotos((current) =>
+											current.filter((_, i) => i !== index),
+										)
+									}
+								/>
+							))}
+							{previews.map((preview, index) => (
+								<PhotoPreview
+									key={preview}
+									src={preview}
+									onRemove={() => removeNewPhoto(index)}
+								/>
+							))}
+						</div>
+					)}
+					{photoCount < 5 && (
+						<button
+							type="button"
+							disabled={busy}
+							onClick={() => fileInput.current?.click()}
+							className="flex min-h-28 w-full flex-col items-center justify-center gap-2 rounded-xl border border-border border-dashed text-muted-foreground hover:bg-accent/50 disabled:opacity-50"
+						>
+							{photoCount === 0 ? (
+								<Camera className="size-7" />
+							) : (
+								<ImagePlus className="size-7" />
+							)}
+							<span className="text-sm">
+								{isOptimizing
+									? "Optimizando fotos…"
+									: photoCount === 0
+										? "Hacer fotos o elegir de la galería"
+										: "Añadir más fotos"}
+							</span>
+						</button>
+					)}
+					<input
+						ref={fileInput}
+						type="file"
+						accept="image/*"
+						multiple
+						className="hidden"
+						onChange={addFiles}
+					/>
+					<p className="text-muted-foreground text-xs">
+						Puedes añadir hasta 5 fotos por comida.
+					</p>
+				</div>
+			)}
+
+			{entryType === "meal" && (
+				<form.Field name="meal_type">
+					{(field) => (
+						<div className="grid gap-2">
+							<Label>Tipo</Label>
+							<div className="flex flex-wrap gap-2">
+								{MEAL_TYPES.map((type) => (
+									<button
+										key={type}
+										type="button"
+										onClick={() => field.handleChange(type)}
+										className={`rounded-full border px-4 py-1.5 text-sm ${
+											field.state.value === type
+												? "border-primary bg-primary text-primary-foreground"
+												: "border-border text-muted-foreground"
+										}`}
+									>
+										{MEAL_TYPE_LABELS[type]}
+									</button>
+								))}
+							</div>
+						</div>
+					)}
+				</form.Field>
+			)}
+
+			{entryType === "water" ? (
+				<form.Field name="water_ml">
+					{(field) => (
+						<div className="grid gap-2">
+							<Label>¿Cuánta agua?</Label>
+							<div className="rounded-2xl border bg-card p-5">
+								<div className="flex items-center justify-center gap-6">
+									<AmountButton
+										label="Restar 250 ml"
+										onClick={() =>
+											field.handleChange(Math.max(250, field.state.value - 250))
+										}
+									>
+										<Minus className="size-5" />
+									</AmountButton>
+									<div className="min-w-28 text-center">
+										<Droplets className="mx-auto size-9 text-sky-500" />
+										<p className="mt-1 font-semibold text-3xl">
+											{formatWater(field.state.value)}
+										</p>
+										<p className="text-muted-foreground text-sm">de agua</p>
+									</div>
+									<AmountButton
+										label="Sumar 250 ml"
+										onClick={() =>
+											field.handleChange(
+												Math.min(10000, field.state.value + 250),
+											)
+										}
+									>
+										<Plus className="size-5" />
+									</AmountButton>
+								</div>
+							</div>
+							{field.state.meta.errors[0] && (
+								<p className="text-destructive text-sm">
+									{field.state.meta.errors[0]?.message}
+								</p>
+							)}
+						</div>
+					)}
+				</form.Field>
+			) : (
+				<form.Field name="description">
+					{(field) => (
+						<div className="grid gap-2">
+							<Label htmlFor="description">
+								{entryType === "meal"
+									? "¿Qué has comido?"
+									: "¿Qué quieres anotar?"}
+							</Label>
+							<Textarea
+								id="description"
+								rows={4}
+								value={field.state.value}
+								onChange={(event) => field.handleChange(event.target.value)}
+								placeholder={
+									entryType === "meal"
+										? "Lentejas con verduras, una manzana…"
+										: "Un café, medicación, suplementos…"
+								}
+							/>
+							{field.state.meta.errors[0] && (
+								<p className="text-destructive text-sm">
+									{field.state.meta.errors[0]?.message}
+								</p>
+							)}
+						</div>
+					)}
+				</form.Field>
+			)}
 
 			<form.Field name="eaten_at">
 				{(field) => (
@@ -254,9 +363,42 @@ export function MealForm({
 			{error && <p className="text-destructive text-sm">{error}</p>}
 
 			<Button type="submit" size="lg" disabled={busy}>
-				{busy ? "Guardando…" : submitLabel}
+				{busy
+					? "Guardando…"
+					: submitLabel === "Guardar cambios"
+						? submitLabel
+						: `Guardar ${ENTRY_TYPE_LABELS[entryType].toLowerCase()}`}
 			</Button>
 		</form>
+	);
+}
+
+function formatWater(ml: number) {
+	if (ml >= 1000) {
+		const liters = ml / 1000;
+		return `${Number.isInteger(liters) ? liters : liters.toFixed(2)} l`;
+	}
+	return `${ml} ml`;
+}
+
+function AmountButton({
+	label,
+	children,
+	onClick,
+}: {
+	label: string;
+	children: React.ReactNode;
+	onClick: () => void;
+}) {
+	return (
+		<button
+			type="button"
+			aria-label={label}
+			onClick={onClick}
+			className="flex size-11 items-center justify-center rounded-full border bg-card hover:bg-accent"
+		>
+			{children}
+		</button>
 	);
 }
 

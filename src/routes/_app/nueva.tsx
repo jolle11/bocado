@@ -27,8 +27,10 @@ function NewMealPage() {
 			</header>
 			<MealForm
 				initialValues={{
+					entry_type: "meal",
 					description: "",
 					meal_type: suggestMealType(),
+					water_ml: 250,
 					eaten_at: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
 					photo_url: "",
 					photo_key: "",

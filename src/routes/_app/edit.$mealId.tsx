@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { MealForm } from "#/components/meal-form";
 import { useMeal, useUpdateMeal } from "#/lib/queries";
+import { normalizeEntryType } from "#/lib/types";
 
 export const Route = createFileRoute("/_app/edit/$mealId")({
 	component: EditMealPage,
@@ -33,7 +34,7 @@ function EditMealPage() {
 			</header>
 			<MealForm
 				initialValues={{
-					entry_type: meal.entry_type ?? "meal",
+					entry_type: normalizeEntryType(meal.entry_type),
 					description: meal.description,
 					meal_type: meal.meal_type,
 					water_ml: meal.water_ml ?? 250,

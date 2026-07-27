@@ -4,7 +4,7 @@ import { Droplets, Images, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { Badge } from "#/components/ui/badge";
 import { Card, CardContent } from "#/components/ui/card";
 import { useImagePreference } from "#/lib/preferences";
-import { MEAL_TYPE_LABELS, type Meal } from "#/lib/types";
+import { MEAL_TYPE_LABELS, type Meal, normalizeEntryType } from "#/lib/types";
 
 export function MealCard({
 	meal,
@@ -19,7 +19,7 @@ export function MealCard({
 		: meal.photo_url
 			? [{ url: meal.photo_url, key: meal.photo_key }]
 			: [];
-	const entryType = meal.entry_type ?? "meal";
+	const entryType = normalizeEntryType(meal.entry_type);
 
 	if (entryType !== "meal") {
 		return (

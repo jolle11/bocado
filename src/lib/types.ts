@@ -20,6 +20,10 @@ export const ENTRY_TYPE_LABELS: Record<EntryType, string> = {
 	extra: "Extra",
 };
 
+export function normalizeEntryType(value: unknown): EntryType {
+	return value === "water" || value === "extra" ? value : "meal";
+}
+
 export const MEAL_TYPE_LABELS: Record<MealType, string> = {
 	desayuno: "Desayuno",
 	almuerzo: "Almuerzo",
@@ -76,7 +80,7 @@ export interface Meal {
 	photo_url: string;
 	photo_key: string;
 	photos?: MealPhoto[];
-	entry_type?: EntryType;
+	entry_type?: EntryType | "";
 	meal_type: MealType;
 	water_ml?: number;
 	eaten_at: string;

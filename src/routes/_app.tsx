@@ -40,7 +40,7 @@ function AppLayout() {
 				</div>
 				<Outlet />
 			</main>
-			<nav className="fixed inset-x-0 bottom-0 border-border border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+			<nav className="fixed inset-x-0 bottom-0 z-30 border-border border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
 				<div className="mx-auto grid max-w-lg grid-cols-4 items-center px-2 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
 					<NavItem
 						to="/"

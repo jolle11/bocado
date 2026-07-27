@@ -117,3 +117,39 @@ test("registro, añadir comida y compartir", async ({ page }, testInfo) => {
 	await expect(page.getByText("Diario de E2E")).toBeVisible();
 	await expect(page.getByText("Tostada con aguacate y tomate")).toBeVisible();
 });
+
+test("la navegación inferior queda por encima de los registros", async ({
+	page,
+}, testInfo) => {
+	const email = `e2e-nav-${testInfo.project.name}-${Date.now()}@test.local`;
+	await page.goto("/register");
+	await page.getByLabel("Nombre").fill("E2E navegación");
+	await page.getByLabel("Email").fill(email);
+	await page.getByLabel("Contraseña").fill(password);
+	await page.getByRole("button", { name: "Crear cuenta" }).click();
+
+	await page.getByRole("link", { name: "Añadir comida" }).first().click();
+	await page.getByLabel("¿Qué has comido?").fill("Comida bajo la navegación");
+	await page.getByRole("button", { name: "Guardar comida" }).click();
+	await expect(page.getByText("Comida bajo la navegación")).toBeVisible();
+
+	// The development-only TanStack launcher overlaps "Ajustes" on mobile.
+	await page
+		.getByRole("button", { name: "Open TanStack Devtools" })
+		.evaluate((button) => button.remove());
+	const bottomNavigationLinks = page.locator("nav").getByRole("link");
+	await expect
+		.poll(() =>
+			bottomNavigationLinks.evaluateAll((links) =>
+				links.every((link) => {
+					const bounds = link.getBoundingClientRect();
+					const hit = document.elementFromPoint(
+						bounds.left + bounds.width / 2,
+						bounds.top + bounds.height / 2,
+					);
+					return hit !== null && link.contains(hit);
+				}),
+			),
+		)
+		.toBe(true);
+});

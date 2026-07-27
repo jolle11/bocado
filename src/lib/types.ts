@@ -39,6 +39,8 @@ export const mealFormSchema = z
 		description: z.string().max(2000, "Máximo 2000 caracteres"),
 		meal_type: z.enum(MEAL_TYPES),
 		water_ml: z.number().int().min(0).max(10000),
+		finished: z.boolean(),
+		unfinished_note: z.string().max(500, "Máximo 500 caracteres"),
 		eaten_at: z.string().min(1, "Falta la hora"),
 		photo_url: z.string(),
 		photo_key: z.string(),
@@ -83,6 +85,8 @@ export interface Meal {
 	entry_type?: EntryType | "";
 	meal_type: MealType;
 	water_ml?: number;
+	unfinished?: boolean;
+	unfinished_note?: string;
 	eaten_at: string;
 	created: string;
 	updated: string;

@@ -6,6 +6,8 @@ const baseEntry = {
 	description: "Lentejas",
 	meal_type: "comida" as const,
 	water_ml: 250,
+	finished: true,
+	unfinished_note: "",
 	eaten_at: "2026-07-27T13:00",
 	photo_url: "",
 	photo_key: "",

@@ -50,6 +50,7 @@ export function MealForm({
 	const [isOptimizing, setIsOptimizing] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const [entryType, setEntryType] = useState(initialValues.entry_type);
+	const [finished, setFinished] = useState(initialValues.finished);
 	const fileInput = useRef<HTMLInputElement>(null);
 
 	useEffect(
@@ -343,6 +344,73 @@ export function MealForm({
 						</div>
 					)}
 				</form.Field>
+			)}
+
+			{entryType === "meal" && (
+				<div className="grid gap-3 rounded-xl border bg-card p-4">
+					<form.Field name="finished">
+						{(field) => (
+							<div className="flex items-center justify-between gap-4">
+								<div>
+									<Label htmlFor="finished">Comida terminada</Label>
+									<p className="mt-0.5 text-muted-foreground text-xs">
+										Desactívalo si no te la has terminado.
+									</p>
+								</div>
+								<button
+									id="finished"
+									type="button"
+									role="switch"
+									aria-checked={field.state.value}
+									onClick={() => {
+										const next = !field.state.value;
+										field.handleChange(next);
+										setFinished(next);
+									}}
+									className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
+										field.state.value ? "bg-primary" : "bg-muted-foreground/35"
+									}`}
+								>
+									<span
+										className={`absolute top-1 size-5 rounded-full bg-white shadow-sm transition-transform ${
+											field.state.value ? "translate-x-6" : "translate-x-1"
+										}`}
+									/>
+									<span className="sr-only">
+										{field.state.value ? "Terminada" : "No terminada"}
+									</span>
+								</button>
+							</div>
+						)}
+					</form.Field>
+
+					{!finished && (
+						<form.Field name="unfinished_note">
+							{(field) => (
+								<div className="grid gap-2 border-border border-t pt-3">
+									<Label htmlFor="unfinished_note">
+										¿Por qué no la has terminado?{" "}
+										<span className="font-normal text-muted-foreground">
+											(opcional)
+										</span>
+									</Label>
+									<Textarea
+										id="unfinished_note"
+										rows={2}
+										value={field.state.value}
+										onChange={(event) => field.handleChange(event.target.value)}
+										placeholder="Demasiada cantidad, no tenía hambre…"
+									/>
+									{field.state.meta.errors[0] && (
+										<p className="text-destructive text-sm">
+											{field.state.meta.errors[0]?.message}
+										</p>
+									)}
+								</div>
+							)}
+						</form.Field>
+					)}
+				</div>
 			)}
 
 			<form.Field name="eaten_at">

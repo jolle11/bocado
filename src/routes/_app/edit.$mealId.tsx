@@ -38,6 +38,8 @@ function EditMealPage() {
 					description: meal.description,
 					meal_type: meal.meal_type,
 					water_ml: meal.water_ml ?? 250,
+					finished: !meal.unfinished,
+					unfinished_note: meal.unfinished_note ?? "",
 					eaten_at: format(new Date(meal.eaten_at), "yyyy-MM-dd'T'HH:mm"),
 					photo_url: meal.photo_url,
 					photo_key: meal.photo_key,

@@ -28,4 +28,28 @@ describe("MealCard", () => {
 		).toBeTruthy();
 		expect(screen.queryByText("Extra")).toBeNull();
 	});
+
+	it("labels an unfinished meal", () => {
+		render(
+			<MealCard
+				meal={{
+					id: "unfinished-meal",
+					user: "user-1",
+					description: "Arroz con verduras",
+					photo_url: "",
+					photo_key: "",
+					photos: [],
+					entry_type: "meal",
+					meal_type: "comida",
+					unfinished: true,
+					unfinished_note: "Demasiada cantidad",
+					eaten_at: "2026-07-27T14:00:00.000Z",
+					created: "2026-07-27T14:00:00.000Z",
+					updated: "2026-07-27T14:00:00.000Z",
+				}}
+			/>,
+		);
+
+		expect(screen.getByText("No terminada")).toBeTruthy();
+	});
 });

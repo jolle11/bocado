@@ -1,6 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { Droplets, Images, Pencil, Sparkles, Trash2 } from "lucide-react";
+import {
+	CircleAlert,
+	Droplets,
+	Images,
+	Pencil,
+	Sparkles,
+	Trash2,
+} from "lucide-react";
 import { Badge } from "#/components/ui/badge";
 import { Card, CardContent } from "#/components/ui/card";
 import { useImagePreference } from "#/lib/preferences";
@@ -56,11 +63,13 @@ export function MealCard({
 	}
 
 	return (
-		<Card className="overflow-hidden py-0">
+		<Card className="relative overflow-hidden py-0">
 			{showImages && photos.length > 0 && (
 				<div
 					className={
-						photos.length === 1 ? "" : "grid grid-cols-2 gap-0.5 bg-border"
+						photos.length === 1
+							? "relative"
+							: "relative grid grid-cols-2 gap-0.5 bg-border"
 					}
 				>
 					{photos.map((photo, index) => (
@@ -76,6 +85,12 @@ export function MealCard({
 							/>
 						</div>
 					))}
+					{meal.unfinished && (
+						<span className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-amber-50/95 px-2.5 py-1 font-semibold text-amber-900 text-xs shadow-sm ring-1 ring-amber-700/15 backdrop-blur">
+							<CircleAlert className="size-3.5" />
+							No terminada
+						</span>
+					)}
 				</div>
 			)}
 			<CardContent className="flex items-start gap-3 p-4">
@@ -94,6 +109,12 @@ export function MealCard({
 							>
 								<Images className="size-3.5" />
 								{photos.length}
+							</span>
+						)}
+						{meal.unfinished && (!showImages || photos.length === 0) && (
+							<span className="flex items-center gap-1 font-medium text-amber-700 text-xs dark:text-amber-400">
+								<CircleAlert className="size-3.5" />
+								No terminada
 							</span>
 						)}
 					</div>

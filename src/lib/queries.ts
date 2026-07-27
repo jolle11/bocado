@@ -59,12 +59,16 @@ export function useMeal(id: string) {
 export function useCreateMeal() {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (data: MealForm) =>
-			pb.collection("meals").create<Meal>({
-				...data,
+		mutationFn: (data: MealForm) => {
+			const { finished, ...meal } = data;
+			return pb.collection("meals").create<Meal>({
+				...meal,
+				unfinished: !finished,
+				unfinished_note: finished ? "" : data.unfinished_note.trim(),
 				eaten_at: pbDate(new Date(data.eaten_at)),
 				user: pb.authStore.record?.id,
-			}),
+			});
+		},
 		onSuccess: () => queryClient.invalidateQueries({ queryKey: ["meals"] }),
 	});
 }
@@ -72,11 +76,15 @@ export function useCreateMeal() {
 export function useUpdateMeal() {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: ({ id, data }: { id: string; data: MealForm }) =>
-			pb.collection("meals").update<Meal>(id, {
-				...data,
+		mutationFn: ({ id, data }: { id: string; data: MealForm }) => {
+			const { finished, ...meal } = data;
+			return pb.collection("meals").update<Meal>(id, {
+				...meal,
+				unfinished: !finished,
+				unfinished_note: finished ? "" : data.unfinished_note.trim(),
 				eaten_at: pbDate(new Date(data.eaten_at)),
-			}),
+			});
+		},
 		onSuccess: () => queryClient.invalidateQueries({ queryKey: ["meals"] }),
 	});
 }

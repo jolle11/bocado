@@ -118,12 +118,22 @@ export function useShareLinks() {
 export function useCreateShareLink() {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (expiresAt: Date | null) =>
+		mutationFn: ({
+			expiresAt,
+			visibleFrom,
+			visibleUntil,
+		}: {
+			expiresAt: Date | null;
+			visibleFrom: Date | null;
+			visibleUntil: Date | null;
+		}) =>
 			pb.collection("share_links").create<ShareLink>({
 				user: pb.authStore.record?.id,
 				token: crypto.randomUUID().replaceAll("-", ""),
 				active: true,
 				expires_at: expiresAt ? pbDate(expiresAt) : "",
+				visible_from: visibleFrom ? pbDate(startOfDay(visibleFrom)) : "",
+				visible_until: visibleUntil ? pbDate(endOfDay(visibleUntil)) : "",
 			}),
 		onSuccess: () =>
 			queryClient.invalidateQueries({ queryKey: ["share_links"] }),

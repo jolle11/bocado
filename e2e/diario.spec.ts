@@ -116,6 +116,12 @@ test("registro, añadir comida y compartir", async ({ page }, testInfo) => {
 	await page.goto(`/share/${token}`);
 	await expect(page.getByText("Diario de E2E")).toBeVisible();
 	await expect(page.getByText("Tostada con aguacate y tomate")).toBeVisible();
+	await page.getByRole("button", { name: "Semanal", exact: true }).click();
+	await expect(page.getByText("Tostada con aguacate y tomate")).toBeVisible();
+	await page.getByRole("button", { name: "Mensual", exact: true }).click();
+	await expect(page.getByText("Tostada con aguacate y tomate")).toBeVisible();
+	await page.getByRole("button", { name: "Diario", exact: true }).click();
+	await expect(page.getByText("Tostada con aguacate y tomate")).toBeVisible();
 });
 
 test("la navegación inferior queda por encima de los registros", async ({

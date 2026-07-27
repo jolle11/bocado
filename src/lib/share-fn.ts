@@ -39,8 +39,19 @@ export const getSharedMeals = createServerFn({ method: "GET" })
 			return { found: false as const, expired: true as const };
 		}
 
+		const filters = ["user = {:user}"];
+		const filterParams: Record<string, string> = { user: link.user };
+		if (link.visible_from) {
+			filters.push("eaten_at >= {:visibleFrom}");
+			filterParams.visibleFrom = link.visible_from;
+		}
+		if (link.visible_until) {
+			filters.push("eaten_at <= {:visibleUntil}");
+			filterParams.visibleUntil = link.visible_until;
+		}
+
 		const meals = await pb.collection("meals").getFullList<Meal>({
-			filter: pb.filter("user = {:user}", { user: link.user }),
+			filter: pb.filter(filters.join(" && "), filterParams),
 			sort: "-eaten_at",
 		});
 
@@ -48,5 +59,7 @@ export const getSharedMeals = createServerFn({ method: "GET" })
 			found: true as const,
 			ownerName: link.expand?.user?.name ?? "",
 			meals,
+			visibleFrom: link.visible_from || null,
+			visibleUntil: link.visible_until || null,
 		};
 	});

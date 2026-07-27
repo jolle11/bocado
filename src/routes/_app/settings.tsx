@@ -47,6 +47,9 @@ function SettingsPage() {
 		"day" | "week" | "forever" | "custom"
 	>("week");
 	const [customDate, setCustomDate] = useState("");
+	const [visibility, setVisibility] = useState<"forever" | "custom">("forever");
+	const [visibleFrom, setVisibleFrom] = useState("");
+	const [visibleUntil, setVisibleUntil] = useState("");
 	const { palette, mode, setPalette, setMode } = useTheme();
 	const { showImages, setShowImages } = useImagePreference();
 
@@ -64,7 +67,17 @@ function SettingsPage() {
 		if (duration === "week") expiresAt = addDays(new Date(), 7);
 		if (duration === "custom")
 			expiresAt = endOfDay(new Date(`${customDate}T00:00:00`));
-		createLink.mutate(expiresAt);
+		createLink.mutate({
+			expiresAt,
+			visibleFrom:
+				visibility === "custom" && visibleFrom
+					? new Date(`${visibleFrom}T00:00:00`)
+					: null,
+			visibleUntil:
+				visibility === "custom" && visibleUntil
+					? new Date(`${visibleUntil}T00:00:00`)
+					: null,
+		});
 	}
 
 	const minimumCustomDate = format(addDays(new Date(), 1), "yyyy-MM-dd");
@@ -185,6 +198,11 @@ function SettingsPage() {
 											: `Caduca ${format(new Date(link.expires_at), "d MMM yyyy, HH:mm", { locale: es })}`
 										: "No caduca"}
 								</p>
+								<p className="text-muted-foreground text-xs">
+									{link.visible_from || link.visible_until
+										? `Visible: ${link.visible_from ? format(new Date(link.visible_from), "d MMM yyyy", { locale: es }) : "inicio"} – ${link.visible_until ? format(new Date(link.visible_until), "d MMM yyyy", { locale: es }) : "hoy"}`
+										: "Todo el diario visible"}
+								</p>
 							</div>
 							<Button
 								variant="ghost"
@@ -255,11 +273,66 @@ function SettingsPage() {
 					</div>
 				)}
 
+				<div className="flex flex-col gap-2">
+					<Label>Periodo visible del diario</Label>
+					<div className="grid grid-cols-2 gap-2">
+						{[
+							{ value: "forever", label: "Indefinido" },
+							{ value: "custom", label: "Elegir periodo" },
+						].map((option) => (
+							<button
+								key={option.value}
+								type="button"
+								onClick={() =>
+									setVisibility(option.value as "forever" | "custom")
+								}
+								className={`rounded-xl border px-3 py-2 text-sm ${
+									visibility === option.value
+										? "border-primary bg-primary/10 font-medium text-primary"
+										: "border-border text-muted-foreground"
+								}`}
+							>
+								{option.label}
+							</button>
+						))}
+					</div>
+					<p className="text-muted-foreground text-xs">
+						Define qué parte del diario podrá consultar quien abra el enlace.
+					</p>
+				</div>
+
+				{visibility === "custom" && (
+					<div className="grid grid-cols-2 gap-3">
+						<div className="flex flex-col gap-2">
+							<Label htmlFor="share-visible-from">Desde</Label>
+							<Input
+								id="share-visible-from"
+								type="date"
+								max={visibleUntil || undefined}
+								value={visibleFrom}
+								onChange={(event) => setVisibleFrom(event.target.value)}
+							/>
+						</div>
+						<div className="flex flex-col gap-2">
+							<Label htmlFor="share-visible-until">Hasta</Label>
+							<Input
+								id="share-visible-until"
+								type="date"
+								min={visibleFrom || undefined}
+								value={visibleUntil}
+								onChange={(event) => setVisibleUntil(event.target.value)}
+							/>
+						</div>
+					</div>
+				)}
+
 				<Button
 					variant="outline"
 					onClick={createShareLink}
 					disabled={
-						createLink.isPending || (duration === "custom" && !customDate)
+						createLink.isPending ||
+						(duration === "custom" && !customDate) ||
+						(visibility === "custom" && (!visibleFrom || !visibleUntil))
 					}
 				>
 					<CalendarClock className="size-4" /> Crear enlace para compartir

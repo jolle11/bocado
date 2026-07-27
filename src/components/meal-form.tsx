@@ -367,13 +367,14 @@ export function MealForm({
 										field.handleChange(next);
 										setFinished(next);
 									}}
-									className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
+									className={`relative h-7 w-12 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
 										field.state.value ? "bg-primary" : "bg-muted-foreground/35"
 									}`}
 								>
 									<span
-										className={`absolute top-1 size-5 rounded-full bg-white shadow-sm transition-transform ${
-											field.state.value ? "translate-x-6" : "translate-x-1"
+										aria-hidden="true"
+										className={`absolute top-1 left-1 size-5 rounded-full bg-white shadow-sm transition-transform ${
+											field.state.value ? "translate-x-5" : "translate-x-0"
 										}`}
 									/>
 									<span className="sr-only">

@@ -302,12 +302,13 @@ function SettingsPage() {
 				</div>
 
 				{visibility === "custom" && (
-					<div className="grid grid-cols-2 gap-3">
+					<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
 						<div className="flex flex-col gap-2">
 							<Label htmlFor="share-visible-from">Desde</Label>
 							<Input
 								id="share-visible-from"
 								type="date"
+								className="max-w-full"
 								max={visibleUntil || undefined}
 								value={visibleFrom}
 								onChange={(event) => setVisibleFrom(event.target.value)}
@@ -318,6 +319,7 @@ function SettingsPage() {
 							<Input
 								id="share-visible-until"
 								type="date"
+								className="max-w-full"
 								min={visibleFrom || undefined}
 								value={visibleUntil}
 								onChange={(event) => setVisibleUntil(event.target.value)}

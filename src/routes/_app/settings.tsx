@@ -303,7 +303,7 @@ function SettingsPage() {
 
 				{visibility === "custom" && (
 					<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-						<div className="flex flex-col gap-2">
+						<div className="flex min-w-0 flex-col gap-2">
 							<Label htmlFor="share-visible-from">Desde</Label>
 							<Input
 								id="share-visible-from"
@@ -314,7 +314,7 @@ function SettingsPage() {
 								onChange={(event) => setVisibleFrom(event.target.value)}
 							/>
 						</div>
-						<div className="flex flex-col gap-2">
+						<div className="flex min-w-0 flex-col gap-2">
 							<Label htmlFor="share-visible-until">Hasta</Label>
 							<Input
 								id="share-visible-until"

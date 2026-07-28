@@ -104,6 +104,27 @@ test("registro, añadir comida y compartir", async ({ page }, testInfo) => {
 	await expect(
 		page.getByRole("button", { name: "Las fotos están ocultas" }),
 	).toBeVisible();
+	await page.getByRole("button", { name: "Elegir periodo" }).click();
+	const visibleDateInputs = page.locator(
+		"#share-visible-from, #share-visible-until",
+	);
+	await expect(visibleDateInputs).toHaveCount(2);
+	await expect
+		.poll(() =>
+			visibleDateInputs.evaluateAll((inputs) =>
+				inputs.every((input) => {
+					const bounds = input.getBoundingClientRect();
+					const container = input.parentElement?.getBoundingClientRect();
+					return (
+						container !== undefined &&
+						bounds.left >= container.left &&
+						bounds.right <= container.right
+					);
+				}),
+			),
+		)
+		.toBe(true);
+	await page.getByRole("button", { name: "Indefinido" }).last().click();
 	await page
 		.getByRole("button", { name: "Crear enlace para compartir" })
 		.click();

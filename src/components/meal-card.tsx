@@ -34,7 +34,7 @@ export function MealCard({
 	if (entryType !== "meal") {
 		return (
 			<>
-				<Card className="relative cursor-pointer transition-colors hover:bg-accent/40">
+				<Card className="relative gap-0 py-0 cursor-pointer transition-colors hover:bg-accent/40">
 					<CardContent className="flex items-center gap-3 p-4">
 						<div
 							className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${
@@ -78,7 +78,7 @@ export function MealCard({
 
 	return (
 		<>
-			<Card className="relative cursor-pointer overflow-hidden py-0 transition-colors hover:bg-accent/40">
+			<Card className="relative cursor-pointer gap-3 overflow-hidden py-0 transition-colors hover:bg-accent/40">
 				{showImages && photos.length > 0 && (
 					<div
 						className={

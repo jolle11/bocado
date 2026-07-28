@@ -142,7 +142,7 @@ test("la navegación inferior queda por encima de los registros", async ({
 	// The development-only TanStack launcher overlaps "Ajustes" on mobile.
 	await page
 		.getByRole("button", { name: "Open TanStack Devtools" })
-		.evaluate((button) => button.remove());
+		.evaluateAll((buttons) => buttons.forEach((button) => button.remove()));
 	const bottomNavigationLinks = page.locator("nav").getByRole("link");
 	await expect
 		.poll(() =>
@@ -158,4 +158,24 @@ test("la navegación inferior queda por encima de los registros", async ({
 			),
 		)
 		.toBe(true);
+
+	await page.getByRole("link", { name: "Ajustes" }).click();
+	const main = page.locator("main");
+	const navigation = page.locator("nav");
+	const initialNavigationBottom = await navigation.evaluate(
+		(element) => element.getBoundingClientRect().bottom,
+	);
+	await expect
+		.poll(() =>
+			main.evaluate((element) => {
+				element.scrollTop = element.scrollHeight;
+				return element.scrollTop;
+			}),
+		)
+		.toBeGreaterThan(0);
+	await expect
+		.poll(() =>
+			navigation.evaluate((element) => element.getBoundingClientRect().bottom),
+		)
+		.toBeCloseTo(initialNavigationBottom, 0);
 });

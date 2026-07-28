@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	applyTheme,
+	normalizePreferences,
+	readPreferences,
 	readThemePreference,
 	resolveThemeMode,
 } from "./preferences";
@@ -56,5 +58,26 @@ describe("preferencias de tema", () => {
 			true,
 		);
 		expect(document.documentElement.classList.contains("dark")).toBe(false);
+	});
+
+	it("migra también la preferencia antigua de imágenes", () => {
+		localStorage.setItem("bocado-show-images", "false");
+
+		expect(readPreferences().diary.showImages).toBe(false);
+		expect(readPreferences().language).toBe("es");
+	});
+
+	it("normaliza documentos parciales para poder añadir ajustes en el futuro", () => {
+		expect(
+			normalizePreferences({
+				appearance: { palette: "forest" },
+				language: "ca",
+			}),
+		).toEqual({
+			version: 1,
+			appearance: { palette: "forest", mode: "system" },
+			diary: { showImages: true },
+			language: "ca",
+		});
 	});
 });

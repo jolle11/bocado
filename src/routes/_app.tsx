@@ -10,6 +10,7 @@ import { useEffect } from "react";
 import { DisplayControls } from "#/components/display-controls";
 import { useAuth } from "#/lib/auth";
 import { pb } from "#/lib/pocketbase";
+import { usePreferencesSync } from "#/lib/preferences";
 
 export const Route = createFileRoute("/_app")({
 	beforeLoad: () => {
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/_app")({
 function AppLayout() {
 	const { isLoggedIn, isReady } = useAuth();
 	const navigate = useNavigate();
+	usePreferencesSync();
 
 	useEffect(() => {
 		if (isReady && !isLoggedIn) {

@@ -46,6 +46,12 @@ describe("preferencias de tema", () => {
 		expect(resolveThemeMode("system")).toBe("dark");
 	});
 
+	it("resuelve el modo automático durante el renderizado en servidor", () => {
+		vi.stubGlobal("window", undefined);
+
+		expect(resolveThemeMode("system")).toBe("light");
+	});
+
 	it("combina de forma independiente paleta y modo", () => {
 		applyTheme({ palette: "lavender", mode: "dark" });
 		expect(document.documentElement.classList.contains("theme-lavender")).toBe(

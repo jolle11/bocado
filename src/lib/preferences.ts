@@ -238,6 +238,7 @@ export function usePreferencesSync() {
 
 export function resolveThemeMode(mode: ThemeMode): ResolvedThemeMode {
 	if (mode !== "system") return mode;
+	if (typeof window === "undefined") return "light";
 	return window.matchMedia?.("(prefers-color-scheme: dark)").matches
 		? "dark"
 		: "light";

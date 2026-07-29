@@ -24,7 +24,7 @@ export function useMealsOfDay(day: Date) {
 					from,
 					to,
 				}),
-				sort: "eaten_at",
+				sort: "-eaten_at",
 			}),
 	});
 }

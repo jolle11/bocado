@@ -17,7 +17,19 @@ const config = defineConfig({
 	},
 	plugins: [
 		devtools(),
-		nitro({ rollupConfig: { external: [/^@sentry\//] } }),
+		nitro({
+			rollupConfig: { external: [/^@sentry\//] },
+			routeRules: {
+				"/sw.js": {
+					headers: {
+						"cache-control": "no-cache, no-store, must-revalidate",
+					},
+				},
+				"/manifest.webmanifest": {
+					headers: { "cache-control": "no-cache, must-revalidate" },
+				},
+			},
+		}),
 		tailwindcss(),
 		tanstackStart(),
 		viteReact(),

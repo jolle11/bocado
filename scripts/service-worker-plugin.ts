@@ -28,14 +28,20 @@ export function serviceWorkerPlugin(): Plugin {
 				...STATIC_URLS,
 				...Object.keys(bundle).map((fileName) => `/${fileName}`),
 			].sort();
-			const buildId = createHash("sha256")
-				.update(precacheUrls.join("\n"))
-				.digest("hex")
-				.slice(0, 12);
 			const template = await readFile(
 				resolve("src/service-worker.js"),
 				"utf8",
 			);
+			const staticContents = await Promise.all(
+				STATIC_URLS.filter((url) => url !== "/").map((url) =>
+					readFile(join(resolve("public"), url.slice(1))),
+				),
+			);
+			const buildHash = createHash("sha256")
+				.update(precacheUrls.join("\n"))
+				.update(template);
+			for (const content of staticContents) buildHash.update(content);
+			const buildId = buildHash.digest("hex").slice(0, 12);
 			const serviceWorker = template
 				.replace("__BUILD_ID__", buildId)
 				.replace("__PRECACHE_URLS__", JSON.stringify(precacheUrls));

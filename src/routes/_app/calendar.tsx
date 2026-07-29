@@ -15,8 +15,10 @@ import { es } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { DiaryTabs } from "#/components/diary-tabs";
+import { ExtraSummary } from "#/components/extra-summary";
 import { MealCard } from "#/components/meal-card";
 import { Button } from "#/components/ui/button";
+import { getExtraStats } from "#/lib/extra-stats";
 import { useDeleteMeal, useMealsInRange } from "#/lib/queries";
 
 export const Route = createFileRoute("/_app/calendar")({
@@ -35,7 +37,23 @@ function CalendarPage() {
 		calendarStart,
 		calendarEnd,
 	);
+	const monthStart = startOfMonth(month);
+	const monthEnd = endOfMonth(month);
+	const previousMonthStart = startOfMonth(subMonths(month, 1));
+	const previousMonthEnd = endOfMonth(previousMonthStart);
+	const { data: previousMeals, isLoading: isPreviousLoading } = useMealsInRange(
+		previousMonthStart,
+		previousMonthEnd,
+	);
 	const deleteMeal = useDeleteMeal();
+	const extraStats = getExtraStats({
+		meals: meals ?? [],
+		previousMeals: previousMeals ?? [],
+		start: monthStart,
+		end: monthEnd,
+		previousStart: previousMonthStart,
+		previousEnd: previousMonthEnd,
+	});
 	const selectedMeals = (meals ?? []).filter((meal) =>
 		isSameDay(new Date(meal.eaten_at), selectedDay),
 	);
@@ -117,6 +135,12 @@ function CalendarPage() {
 					})}
 				</div>
 			</div>
+
+			<ExtraSummary
+				stats={extraStats}
+				period="mes"
+				isLoading={isLoading || isPreviousLoading}
+			/>
 
 			<section className="flex flex-col gap-3">
 				<h2 className="font-medium capitalize">

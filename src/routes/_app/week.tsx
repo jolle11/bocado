@@ -11,8 +11,10 @@ import { es } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { DiaryTabs } from "#/components/diary-tabs";
+import { ExtraSummary } from "#/components/extra-summary";
 import { MealCard } from "#/components/meal-card";
 import { Button } from "#/components/ui/button";
+import { getExtraStats } from "#/lib/extra-stats";
 import { useDeleteMeal, useMealsInRange } from "#/lib/queries";
 
 export const Route = createFileRoute("/_app/week")({
@@ -24,7 +26,21 @@ function WeekPage() {
 	const weekStart = startOfWeek(anchor, { weekStartsOn: 1 });
 	const weekEnd = endOfWeek(anchor, { weekStartsOn: 1 });
 	const { data: meals, isLoading } = useMealsInRange(weekStart, weekEnd);
+	const previousWeekStart = subWeeks(weekStart, 1);
+	const previousWeekEnd = endOfWeek(previousWeekStart, { weekStartsOn: 1 });
+	const { data: previousMeals, isLoading: isPreviousLoading } = useMealsInRange(
+		previousWeekStart,
+		previousWeekEnd,
+	);
 	const deleteMeal = useDeleteMeal();
+	const extraStats = getExtraStats({
+		meals: meals ?? [],
+		previousMeals: previousMeals ?? [],
+		start: weekStart,
+		end: weekEnd,
+		previousStart: previousWeekStart,
+		previousEnd: previousWeekEnd,
+	});
 	const days = Array.from({ length: 7 }, (_, index) => {
 		const date = new Date(weekStart);
 		date.setDate(weekStart.getDate() + index);
@@ -68,6 +84,12 @@ function WeekPage() {
 					<ChevronRight className="size-5" />
 				</Button>
 			</div>
+
+			<ExtraSummary
+				stats={extraStats}
+				period="semana"
+				isLoading={isLoading || isPreviousLoading}
+			/>
 
 			{isLoading && <p className="text-muted-foreground text-sm">Cargando…</p>}
 			{days.map((day) => {

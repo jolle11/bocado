@@ -7,10 +7,8 @@ import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
+import { serviceWorkerPlugin } from "./scripts/service-worker-plugin";
 
-// PWA: manifest y service worker son estáticos en public/ (el sw.js generado
-// por vite-plugin-pwa se escribía después de que nitro empaquetara sus assets
-// y el servidor lo devolvía 404).
 const config = defineConfig({
 	resolve: { tsconfigPaths: true },
 	test: {
@@ -23,6 +21,7 @@ const config = defineConfig({
 		tailwindcss(),
 		tanstackStart(),
 		viteReact(),
+		serviceWorkerPlugin(),
 	],
 });
 

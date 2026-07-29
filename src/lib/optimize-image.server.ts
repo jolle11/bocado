@@ -7,9 +7,8 @@ import {
 export { IMAGE_TARGET_SIZE, needsServerOptimization };
 
 const SERVER_ENCODINGS = [
-	{ maxDimension: 1920, quality: 80 },
-	{ maxDimension: 1920, quality: 70 },
-	{ maxDimension: 1600, quality: 72 },
+	{ maxDimension: 1600, quality: 78 },
+	{ maxDimension: 1600, quality: 68 },
 	{ maxDimension: 1280, quality: 68 },
 	{ maxDimension: 1024, quality: 62 },
 	{ maxDimension: 800, quality: 58 },

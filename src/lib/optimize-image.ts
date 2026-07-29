@@ -2,7 +2,7 @@ import { IMAGE_TARGET_SIZE } from "./image-optimization";
 
 export { IMAGE_TARGET_SIZE };
 
-const MAX_DIMENSION = 1920;
+const MAX_DIMENSION = 1600;
 
 const QUALITIES = [0.82, 0.72, 0.62];
 const SCALE_STEPS = [1, 0.85, 0.7, 0.55];

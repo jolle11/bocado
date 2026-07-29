@@ -98,7 +98,10 @@ export function MealCard({
 									src={photo.url}
 									alt={`${meal.description}, foto ${index + 1}`}
 									className="aspect-video h-full w-full object-cover"
+									width={640}
+									height={360}
 									loading="lazy"
+									decoding="async"
 								/>
 							</div>
 						))}

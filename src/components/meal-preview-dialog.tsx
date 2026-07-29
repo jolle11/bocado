@@ -67,6 +67,8 @@ export function MealPreviewDialog({
 										src={photo.url}
 										alt={`${meal.description || ENTRY_TYPE_LABELS[entryType]}, foto ${index + 1}`}
 										className="max-h-[60dvh] w-full object-contain"
+										loading="lazy"
+										decoding="async"
 									/>
 								))}
 							</div>

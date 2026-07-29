@@ -484,6 +484,9 @@ function PhotoPreview({
 				src={src}
 				alt="Vista previa"
 				className="aspect-video w-full object-cover"
+				width={640}
+				height={360}
+				decoding="async"
 			/>
 			<button
 				type="button"

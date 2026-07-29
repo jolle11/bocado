@@ -7,11 +7,11 @@ import {
 
 describe("fitWithin", () => {
 	it("reduce una foto horizontal conservando su proporción", () => {
-		expect(fitWithin(4032, 3024)).toEqual({ width: 1920, height: 1440 });
+		expect(fitWithin(4032, 3024)).toEqual({ width: 1600, height: 1200 });
 	});
 
 	it("reduce una foto vertical conservando su proporción", () => {
-		expect(fitWithin(3024, 4032)).toEqual({ width: 1440, height: 1920 });
+		expect(fitWithin(3024, 4032)).toEqual({ width: 1200, height: 1600 });
 	});
 
 	it("no amplía imágenes pequeñas", () => {
@@ -27,7 +27,7 @@ describe("encodeCanvasForUpload", () => {
 					const result =
 						type === "image/webp"
 							? new Blob(["x".repeat(900_000)], { type: "image/png" })
-							: new Blob(["x".repeat(600_000)], { type: "image/jpeg" });
+							: new Blob(["x".repeat(300_000)], { type: "image/jpeg" });
 					callback(result);
 				},
 			),
@@ -42,7 +42,7 @@ describe("encodeCanvasForUpload", () => {
 	it("conserva WebP cuando el navegador lo produce correctamente", async () => {
 		const chromiumCanvas = {
 			toBlob: vi.fn((callback: BlobCallback, type?: string) => {
-				callback(new Blob(["x".repeat(500_000)], { type }));
+				callback(new Blob(["x".repeat(300_000)], { type }));
 			}),
 		} as unknown as HTMLCanvasElement;
 

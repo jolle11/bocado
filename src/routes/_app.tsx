@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { CalendarDays, Plus, Settings, UtensilsCrossed } from "lucide-react";
 import { useEffect } from "react";
+import { AppLoadingShell } from "#/components/app-loading-shell";
 import { DisplayControls } from "#/components/display-controls";
 import { useAuth } from "#/lib/auth";
 import { pb } from "#/lib/pocketbase";
@@ -32,7 +33,8 @@ function AppLayout() {
 		}
 	}, [isLoggedIn, isReady, navigate]);
 
-	if (!isReady || !isLoggedIn) return null;
+	if (!isReady) return <AppLoadingShell />;
+	if (!isLoggedIn) return null;
 
 	return (
 		<div className="mx-auto flex h-dvh w-full max-w-lg flex-col overflow-hidden">

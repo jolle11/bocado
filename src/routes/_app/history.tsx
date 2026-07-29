@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { DiaryTabs } from "#/components/diary-tabs";
 import { MealCard } from "#/components/meal-card";
+import { Button } from "#/components/ui/button";
 import { useDeleteMeal, useMealHistory } from "#/lib/queries";
 import type { Meal } from "#/lib/types";
 
@@ -22,8 +23,10 @@ export function groupByDay(meals: Meal[]) {
 }
 
 function HistoryPage() {
-	const { data: meals, isLoading } = useMealHistory();
+	const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
+		useMealHistory();
 	const deleteMeal = useDeleteMeal();
+	const meals = data?.pages.flatMap((page) => page.items) ?? [];
 
 	return (
 		<div className="flex flex-col gap-6">
@@ -34,13 +37,13 @@ function HistoryPage() {
 
 			{isLoading && <p className="text-muted-foreground text-sm">Cargando…</p>}
 
-			{!isLoading && (meals?.length ?? 0) === 0 && (
+			{!isLoading && meals.length === 0 && (
 				<p className="text-muted-foreground">
 					Todavía no hay comidas registradas.
 				</p>
 			)}
 
-			{groupByDay(meals ?? []).map(([day, dayMeals]) => (
+			{groupByDay(meals).map(([day, dayMeals]) => (
 				<section key={day} className="flex flex-col gap-3">
 					<h2 className="font-medium text-muted-foreground text-sm capitalize">
 						{format(new Date(day), "EEEE, d 'de' MMMM", { locale: es })}
@@ -54,6 +57,17 @@ function HistoryPage() {
 					))}
 				</section>
 			))}
+
+			{hasNextPage && (
+				<Button
+					type="button"
+					variant="outline"
+					disabled={isFetchingNextPage}
+					onClick={() => fetchNextPage()}
+				>
+					{isFetchingNextPage ? "Cargando…" : "Cargar más"}
+				</Button>
+			)}
 		</div>
 	);
 }

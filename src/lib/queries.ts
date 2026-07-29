@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+	useInfiniteQuery,
+	useMutation,
+	useQuery,
+	useQueryClient,
+} from "@tanstack/react-query";
 import { endOfDay, startOfDay } from "date-fns";
 import { pb } from "./pocketbase";
 import type { Meal, MealForm, ShareLink } from "./types";
@@ -25,10 +30,15 @@ export function useMealsOfDay(day: Date) {
 }
 
 export function useMealHistory() {
-	return useQuery({
+	return useInfiniteQuery({
 		queryKey: ["meals", "history"],
-		queryFn: () =>
-			pb.collection("meals").getFullList<Meal>({ sort: "-eaten_at" }),
+		queryFn: ({ pageParam }) =>
+			pb
+				.collection("meals")
+				.getList<Meal>(pageParam, 30, { sort: "-eaten_at" }),
+		initialPageParam: 1,
+		getNextPageParam: (lastPage) =>
+			lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
 	});
 }
 

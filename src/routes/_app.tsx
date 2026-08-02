@@ -4,11 +4,19 @@ import {
 	Outlet,
 	redirect,
 	useNavigate,
+	useRouterState,
 } from "@tanstack/react-router";
-import { CalendarDays, Plus, Settings, UtensilsCrossed } from "lucide-react";
-import { useEffect } from "react";
+import {
+	ArrowUp,
+	CalendarDays,
+	Plus,
+	Settings,
+	UtensilsCrossed,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { AppLoadingShell } from "#/components/app-loading-shell";
 import { DisplayControls } from "#/components/display-controls";
+import { Button } from "#/components/ui/button";
 import { useAuth } from "#/lib/auth";
 import { pb } from "#/lib/pocketbase";
 import { usePreferencesSync } from "#/lib/preferences";
@@ -25,7 +33,17 @@ export const Route = createFileRoute("/_app")({
 function AppLayout() {
 	const { isLoggedIn, isReady } = useAuth();
 	const navigate = useNavigate();
+	const pathname = useRouterState({
+		select: (state) => state.location.pathname,
+	});
+	const mainRef = useRef<HTMLElement>(null);
+	const [showScrollToTop, setShowScrollToTop] = useState(false);
 	usePreferencesSync();
+	const isHistoryPage = pathname === "/history";
+
+	const scrollToTop = () => {
+		mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+	};
 
 	useEffect(() => {
 		if (isReady && !isLoggedIn) {
@@ -33,17 +51,42 @@ function AppLayout() {
 		}
 	}, [isLoggedIn, isReady, navigate]);
 
+	useEffect(() => {
+		setShowScrollToTop(
+			pathname === "/history" && (mainRef.current?.scrollTop ?? 0) >= 600,
+		);
+	}, [pathname]);
+
 	if (!isReady) return <AppLoadingShell />;
 	if (!isLoggedIn) return null;
 
 	return (
-		<div className="mx-auto flex h-dvh w-full max-w-lg flex-col overflow-hidden">
-			<main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 pt-4 pb-4">
+		<div className="relative mx-auto flex h-dvh w-full max-w-lg flex-col overflow-hidden">
+			<main
+				ref={mainRef}
+				className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 pt-4 pb-4"
+				onScroll={(event) => {
+					if (isHistoryPage) {
+						setShowScrollToTop(event.currentTarget.scrollTop >= 600);
+					}
+				}}
+			>
 				<div className="mb-2 flex justify-end">
 					<DisplayControls />
 				</div>
 				<Outlet />
 			</main>
+			{isHistoryPage && showScrollToTop && (
+				<Button
+					type="button"
+					size="icon"
+					className="absolute right-4 bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] z-20 rounded-full shadow-lg sm:hidden"
+					onClick={scrollToTop}
+					aria-label="Volver arriba"
+				>
+					<ArrowUp className="size-5" />
+				</Button>
+			)}
 			<nav className="z-30 shrink-0 border-border border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
 				<div className="mx-auto grid max-w-lg grid-cols-4 items-center px-2 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
 					<NavItem
@@ -64,6 +107,12 @@ function AppLayout() {
 						to="/history"
 						icon={<CalendarDays className="size-5" />}
 						label="Diario"
+						onClick={(event) => {
+							if (isHistoryPage) {
+								event.preventDefault();
+								scrollToTop();
+							}
+						}}
 					/>
 					<NavItem
 						to="/settings"
@@ -80,16 +129,19 @@ function NavItem({
 	to,
 	icon,
 	label,
+	onClick,
 }: {
 	to: string;
 	icon: React.ReactNode;
 	label: string;
+	onClick?: React.MouseEventHandler<HTMLAnchorElement>;
 }) {
 	return (
 		<Link
 			to={to}
 			className="flex flex-col items-center gap-1 rounded-md py-1 text-muted-foreground text-xs [&.active]:text-primary"
 			activeProps={{ className: "active" }}
+			onClick={onClick}
 		>
 			{icon}
 			{label}

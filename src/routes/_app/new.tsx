@@ -2,9 +2,18 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { MealForm } from "#/components/meal-form";
 import { useCreateMeal } from "#/lib/queries";
-import type { MealType } from "#/lib/types";
+import { MEAL_TYPES, type MealType } from "#/lib/types";
 
-export const Route = createFileRoute("/_app/new")({ component: NewMealPage });
+export const Route = createFileRoute("/_app/new")({
+	validateSearch: (search: Record<string, unknown>) => ({
+		mealType:
+			typeof search.mealType === "string" &&
+			MEAL_TYPES.includes(search.mealType as MealType)
+				? (search.mealType as MealType)
+				: undefined,
+	}),
+	component: NewMealPage,
+});
 
 function suggestMealType(): MealType {
 	const h = new Date().getHours();
@@ -19,6 +28,7 @@ function suggestMealType(): MealType {
 function NewMealPage() {
 	const navigate = useNavigate();
 	const createMeal = useCreateMeal();
+	const { mealType } = Route.useSearch();
 
 	return (
 		<div className="flex flex-col gap-6">
@@ -29,7 +39,7 @@ function NewMealPage() {
 				initialValues={{
 					entry_type: "meal",
 					description: "",
-					meal_type: suggestMealType(),
+					meal_type: mealType ?? suggestMealType(),
 					water_ml: 250,
 					finished: true,
 					unfinished_note: "",

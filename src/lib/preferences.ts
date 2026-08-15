@@ -12,6 +12,21 @@ export type ThemePalette = (typeof THEME_PALETTES)[number]["id"];
 export type ThemeMode = "system" | "light" | "dark";
 export type ResolvedThemeMode = Exclude<ThemeMode, "system">;
 
+export type ReminderMealType = "desayuno" | "comida" | "cena";
+
+export interface MealReminderPreference {
+	enabled: boolean;
+	time: string;
+	windowStart: string;
+	windowEnd: string;
+}
+
+export interface ReminderPreferences {
+	enabled: boolean;
+	timeZone: string;
+	meals: Record<ReminderMealType, MealReminderPreference>;
+}
+
 export interface UserPreferences {
 	version: 1;
 	appearance: {
@@ -21,6 +36,7 @@ export interface UserPreferences {
 	diary: {
 		showImages: boolean;
 	};
+	reminders: ReminderPreferences;
 	/** Prepared for the upcoming internationalisation work. */
 	language: string;
 }
@@ -40,6 +56,30 @@ const DEFAULT_PREFERENCES: UserPreferences = {
 	version: 1,
 	appearance: { palette: "default", mode: "system" },
 	diary: { showImages: true },
+	reminders: {
+		enabled: false,
+		timeZone: "Europe/Madrid",
+		meals: {
+			desayuno: {
+				enabled: true,
+				time: "09:30",
+				windowStart: "07:00",
+				windowEnd: "10:00",
+			},
+			comida: {
+				enabled: true,
+				time: "14:30",
+				windowStart: "12:00",
+				windowEnd: "15:00",
+			},
+			cena: {
+				enabled: true,
+				time: "22:00",
+				windowStart: "20:00",
+				windowEnd: "23:00",
+			},
+		},
+	},
 	language: "es",
 };
 
@@ -83,6 +123,31 @@ export function normalizePreferences(value: unknown): UserPreferences {
 		candidate.diary && typeof candidate.diary === "object"
 			? candidate.diary
 			: {};
+	const reminders =
+		candidate.reminders && typeof candidate.reminders === "object"
+			? candidate.reminders
+			: {};
+	const reminderMeals =
+		reminders.meals && typeof reminders.meals === "object"
+			? reminders.meals
+			: {};
+	const normalizeReminder = (meal: ReminderMealType) => {
+		const value = reminderMeals[meal];
+		const fallback = DEFAULT_PREFERENCES.reminders.meals[meal];
+		return {
+			enabled:
+				typeof value?.enabled === "boolean" ? value.enabled : fallback.enabled,
+			time: /^\d{2}:\d{2}$/.test(value?.time ?? "")
+				? value.time
+				: fallback.time,
+			windowStart: /^\d{2}:\d{2}$/.test(value?.windowStart ?? "")
+				? value.windowStart
+				: fallback.windowStart,
+			windowEnd: /^\d{2}:\d{2}$/.test(value?.windowEnd ?? "")
+				? value.windowEnd
+				: fallback.windowEnd,
+		};
+	};
 
 	return {
 		version: 1,
@@ -99,6 +164,19 @@ export function normalizePreferences(value: unknown): UserPreferences {
 				typeof diary.showImages === "boolean"
 					? diary.showImages
 					: DEFAULT_PREFERENCES.diary.showImages,
+		},
+		reminders: {
+			enabled:
+				typeof reminders.enabled === "boolean" ? reminders.enabled : false,
+			timeZone:
+				typeof reminders.timeZone === "string" && reminders.timeZone
+					? reminders.timeZone
+					: DEFAULT_PREFERENCES.reminders.timeZone,
+			meals: {
+				desayuno: normalizeReminder("desayuno"),
+				comida: normalizeReminder("comida"),
+				cena: normalizeReminder("cena"),
+			},
 		},
 		language:
 			typeof candidate.language === "string" && candidate.language
@@ -319,4 +397,23 @@ export function useImagePreference() {
 	}
 
 	return { showImages, setShowImages };
+}
+
+export function useReminderPreferences() {
+	const [reminders, setRemindersState] = useState<ReminderPreferences>(
+		DEFAULT_PREFERENCES.reminders,
+	);
+
+	useEffect(() => {
+		const sync = () => setRemindersState(readPreferences().reminders);
+		sync();
+		window.addEventListener(PREFERENCE_EVENT, sync);
+		return () => window.removeEventListener(PREFERENCE_EVENT, sync);
+	}, []);
+
+	function setReminders(next: ReminderPreferences) {
+		updatePreferences((current) => ({ ...current, reminders: next }));
+	}
+
+	return { reminders, setReminders };
 }

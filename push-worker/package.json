@@ -1,0 +1,13 @@
+{
+  "name": "bocado-push-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "pocketbase": "0.27.0",
+    "web-push": "3.6.7"
+  }
+}

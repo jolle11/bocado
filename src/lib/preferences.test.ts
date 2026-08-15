@@ -83,6 +83,30 @@ describe("preferencias de tema", () => {
 			version: 1,
 			appearance: { palette: "forest", mode: "system" },
 			diary: { showImages: true },
+			reminders: {
+				enabled: false,
+				timeZone: "Europe/Madrid",
+				meals: {
+					desayuno: {
+						enabled: true,
+						time: "09:30",
+						windowStart: "07:00",
+						windowEnd: "10:00",
+					},
+					comida: {
+						enabled: true,
+						time: "14:30",
+						windowStart: "12:00",
+						windowEnd: "15:00",
+					},
+					cena: {
+						enabled: true,
+						time: "22:00",
+						windowStart: "20:00",
+						windowEnd: "23:00",
+					},
+				},
+			},
 			language: "ca",
 		});
 	});

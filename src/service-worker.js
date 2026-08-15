@@ -45,6 +45,41 @@ self.addEventListener("fetch", (event) => {
 	}
 });
 
+self.addEventListener("push", (event) => {
+	const data = event.data?.json() ?? {};
+	event.waitUntil(
+		self.registration.showNotification(data.title ?? "Bocado", {
+			body: data.body ?? "¿Quieres registrar lo que has comido?",
+			icon: "/logo192.png",
+			badge: "/favicon-32.png",
+			data: { url: data.url ?? "/new" },
+			tag: data.tag ?? "meal-reminder",
+		}),
+	);
+});
+
+self.addEventListener("notificationclick", (event) => {
+	event.notification.close();
+	const target = new URL(
+		event.notification.data?.url ?? "/new",
+		self.location.origin,
+	).href;
+	event.waitUntil(
+		self.clients
+			.matchAll({ type: "window", includeUncontrolled: true })
+			.then((clients) => {
+				const existing = clients.find((client) =>
+					client.url.startsWith(self.location.origin),
+				);
+				if (existing) {
+					existing.navigate(target);
+					return existing.focus();
+				}
+				return self.clients.openWindow(target);
+			}),
+	);
+});
+
 async function cacheFirst(request) {
 	const cached = await caches.match(request);
 	if (cached) return cached;

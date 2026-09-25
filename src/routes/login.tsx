@@ -6,7 +6,10 @@ import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { login } from "#/lib/auth";
 
-export const Route = createFileRoute("/login")({ component: LoginPage });
+export const Route = createFileRoute("/login")({
+	head: () => ({ meta: [{ name: "robots", content: "noindex, nofollow" }] }),
+	component: LoginPage,
+});
 
 function LoginPage() {
 	const navigate = useNavigate();
@@ -20,7 +23,7 @@ function LoginPage() {
 		setError(null);
 		try {
 			await login(String(data.get("email")), String(data.get("password")));
-			navigate({ to: "/" });
+			navigate({ to: "/app" });
 		} catch {
 			setError("Email o contraseña incorrectos");
 		} finally {

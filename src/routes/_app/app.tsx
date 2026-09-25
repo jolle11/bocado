@@ -7,7 +7,7 @@ import { Button } from "#/components/ui/button";
 import { useAuth } from "#/lib/auth";
 import { useDeleteMeal, useMealsOfDay } from "#/lib/queries";
 
-export const Route = createFileRoute("/_app/")({ component: TodayPage });
+export const Route = createFileRoute("/_app/app")({ component: TodayPage });
 
 function TodayPage() {
 	const { user } = useAuth();
@@ -34,7 +34,7 @@ function TodayPage() {
 						Aún no has registrado nada hoy
 					</p>
 					<Button asChild>
-						<Link to="/new">
+						<Link to="/new" search={{ mealType: undefined }}>
 							<Plus className="size-4" /> Añadir comida
 						</Link>
 					</Button>

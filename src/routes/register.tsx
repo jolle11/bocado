@@ -6,7 +6,10 @@ import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { register } from "#/lib/auth";
 
-export const Route = createFileRoute("/register")({ component: RegisterPage });
+export const Route = createFileRoute("/register")({
+	head: () => ({ meta: [{ name: "robots", content: "noindex, nofollow" }] }),
+	component: RegisterPage,
+});
 
 function RegisterPage() {
 	const navigate = useNavigate();
@@ -29,7 +32,7 @@ function RegisterPage() {
 				password,
 				String(data.get("name")),
 			);
-			navigate({ to: "/" });
+			navigate({ to: "/app" });
 		} catch {
 			setError("No se pudo crear la cuenta. ¿Quizá el email ya está en uso?");
 		} finally {

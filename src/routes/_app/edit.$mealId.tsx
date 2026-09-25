@@ -48,7 +48,7 @@ function EditMealPage() {
 				submitLabel="Guardar cambios"
 				onSubmit={async (values) => {
 					await updateMeal.mutateAsync({ id: meal.id, data: values });
-					navigate({ to: "/" });
+					navigate({ to: "/app" });
 				}}
 			/>
 		</div>

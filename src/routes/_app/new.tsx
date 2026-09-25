@@ -51,7 +51,7 @@ function NewMealPage() {
 				submitLabel="Guardar comida"
 				onSubmit={async (values) => {
 					await createMeal.mutateAsync(values);
-					navigate({ to: "/" });
+					navigate({ to: "/app" });
 				}}
 			/>
 		</div>

@@ -22,6 +22,7 @@ import { pb } from "#/lib/pocketbase";
 import { usePreferencesSync } from "#/lib/preferences";
 
 export const Route = createFileRoute("/_app")({
+	head: () => ({ meta: [{ name: "robots", content: "noindex, nofollow" }] }),
 	beforeLoad: () => {
 		if (typeof window !== "undefined" && !pb.authStore.isValid) {
 			throw redirect({ to: "/login" });
@@ -90,12 +91,13 @@ function AppLayout() {
 			<nav className="z-30 shrink-0 border-border border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
 				<div className="mx-auto grid max-w-lg grid-cols-4 items-center px-2 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
 					<NavItem
-						to="/"
+						to="/app"
 						icon={<UtensilsCrossed className="size-5" />}
 						label="Hoy"
 					/>
 					<Link
 						to="/new"
+						search={{ mealType: undefined }}
 						className="justify-self-center"
 						aria-label="Añadir comida"
 					>

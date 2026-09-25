@@ -6,7 +6,7 @@
 	"display": "standalone",
 	"orientation": "portrait",
 	"scope": "/",
-	"start_url": "/",
+	"start_url": "/app",
 	"background_color": "#e7f3ec",
 	"theme_color": "#e7f3ec",
 	"categories": ["health", "lifestyle", "food"],

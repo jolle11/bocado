@@ -1,5 +1,5 @@
 # PocketBase para Railway (servicio separado con volumen en /pb_data)
-FROM alpine:3.20
+FROM public.ecr.aws/docker/library/alpine:3.20
 
 ARG PB_VERSION=0.39.9
 

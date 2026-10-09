@@ -255,7 +255,7 @@ function LandingPage() {
 				</section>
 
 				<section className="landing-cta" aria-labelledby="cta-title">
-					<span className="landing-cta-spark">✳</span>
+					<span className="landing-cta-spark" aria-hidden="true">{"\u2733\uFE0E"}</span>
 					<span className="landing-eyebrow">EMPIEZA HOY</span>
 					<h2 id="cta-title">
 						Cada bocado cuenta

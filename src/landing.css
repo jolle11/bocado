@@ -521,6 +521,12 @@
 	top: 25%;
 	color: #c3d6a3;
 	font-size: 60px;
+	pointer-events: none;
+}
+@media (max-width: 720px) {
+	.landing-cta-spark {
+		display: none;
+	}
 }
 .landing-button-light {
 	background: #fff;

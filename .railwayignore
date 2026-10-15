@@ -1,8 +1,14 @@
 node_modules
+**/node_modules
+.git
+.nitro
+.tanstack
 .output
 dist
 test-results
 playwright-report
 .env
+.env.*
+!.env.example
 pb/pb_data
 pb/pocketbase

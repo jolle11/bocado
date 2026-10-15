@@ -1,0 +1,13 @@
+.git
+**/node_modules
+**/.env
+**/.env.*
+!.env.example
+.output
+.nitro
+.tanstack
+dist
+test-results
+playwright-report
+pb/pb_data
+pb/pocketbase

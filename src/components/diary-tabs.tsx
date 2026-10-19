@@ -8,7 +8,7 @@ const tabs = [
 
 export function DiaryTabs() {
 	return (
-		<div className="grid grid-cols-3 rounded-xl bg-muted p-1">
+		<div className="grid grid-cols-3 rounded-xl bg-muted p-1 lg:max-w-md">
 			{tabs.map((tab) => (
 				<Link
 					key={tab.to}

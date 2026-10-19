@@ -21,7 +21,7 @@ function TodayPage() {
 				<p className="text-muted-foreground text-sm capitalize">
 					{format(today, "EEEE, d 'de' MMMM", { locale: es })}
 				</p>
-				<h1 className="font-semibold text-2xl">
+				<h1 className="font-semibold text-2xl lg:text-3xl">
 					Hola{user?.name ? `, ${user.name}` : ""} 👋
 				</h1>
 			</header>
@@ -41,7 +41,7 @@ function TodayPage() {
 				</div>
 			)}
 
-			<div className="flex flex-col gap-4">
+			<div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
 				{meals?.map((meal) => (
 					<MealCard
 						key={meal.id}

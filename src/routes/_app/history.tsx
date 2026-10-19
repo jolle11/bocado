@@ -48,13 +48,15 @@ function HistoryPage() {
 					<h2 className="font-medium text-muted-foreground text-sm capitalize">
 						{format(new Date(day), "EEEE, d 'de' MMMM", { locale: es })}
 					</h2>
-					{dayMeals.map((meal) => (
-						<MealCard
-							key={meal.id}
-							meal={meal}
-							onDelete={(id) => deleteMeal.mutate(id)}
-						/>
-					))}
+					<div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
+						{dayMeals.map((meal) => (
+							<MealCard
+								key={meal.id}
+								meal={meal}
+								onDelete={(id) => deleteMeal.mutate(id)}
+							/>
+						))}
+					</div>
 				</section>
 			))}
 
@@ -62,6 +64,7 @@ function HistoryPage() {
 				<Button
 					type="button"
 					variant="outline"
+					className="lg:self-center lg:px-10"
 					disabled={isFetchingNextPage}
 					onClick={() => fetchNextPage()}
 				>

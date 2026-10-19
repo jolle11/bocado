@@ -92,38 +92,45 @@ function WeekPage() {
 			/>
 
 			{isLoading && <p className="text-muted-foreground text-sm">Cargando…</p>}
-			{days.map((day) => {
-				const dayMeals = (meals ?? []).filter((meal) =>
-					isSameDay(new Date(meal.eaten_at), day),
-				);
-				return (
-					<section key={day.toISOString()} className="flex flex-col gap-3">
-						<div className="flex items-center justify-between border-border border-b pb-2">
-							<h2
-								className={`font-medium text-sm capitalize ${
-									isSameDay(day, new Date()) ? "text-primary" : ""
-								}`}
-							>
-								{format(day, "EEEE d", { locale: es })}
-							</h2>
-							<span className="text-muted-foreground text-xs">
-								{dayMeals.length || "—"}
-							</span>
-						</div>
-						{dayMeals.length === 0 ? (
-							<p className="py-1 text-muted-foreground text-xs">Sin comidas</p>
-						) : (
-							dayMeals.map((meal) => (
-								<MealCard
-									key={meal.id}
-									meal={meal}
-									onDelete={(id) => deleteMeal.mutate(id)}
-								/>
-							))
-						)}
-					</section>
-				);
-			})}
+			<div className="flex flex-col gap-5 lg:grid lg:grid-cols-2 lg:gap-6 2xl:grid-cols-3">
+				{days.map((day) => {
+					const dayMeals = (meals ?? []).filter((meal) =>
+						isSameDay(new Date(meal.eaten_at), day),
+					);
+					return (
+						<section
+							key={day.toISOString()}
+							className="flex flex-col gap-3 lg:rounded-2xl lg:border lg:bg-card/40 lg:p-4"
+						>
+							<div className="flex items-center justify-between border-border border-b pb-2">
+								<h2
+									className={`font-medium text-sm capitalize ${
+										isSameDay(day, new Date()) ? "text-primary" : ""
+									}`}
+								>
+									{format(day, "EEEE d", { locale: es })}
+								</h2>
+								<span className="text-muted-foreground text-xs">
+									{dayMeals.length || "—"}
+								</span>
+							</div>
+							{dayMeals.length === 0 ? (
+								<p className="py-1 text-muted-foreground text-xs">
+									Sin comidas
+								</p>
+							) : (
+								dayMeals.map((meal) => (
+									<MealCard
+										key={meal.id}
+										meal={meal}
+										onDelete={(id) => deleteMeal.mutate(id)}
+									/>
+								))
+							)}
+						</section>
+					);
+				})}
+			</div>
 		</div>
 	);
 }

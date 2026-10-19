@@ -12,12 +12,14 @@ import {
 	subMonths,
 } from "date-fns";
 import { es } from "date-fns/locale";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useState } from "react";
-import { DiaryTabs } from "#/components/diary-tabs";
+import { DiaryHeader } from "#/components/diary-tabs";
 import { ExtraSummary } from "#/components/extra-summary";
 import { MealCard } from "#/components/meal-card";
+import { Kbd } from "#/components/shortcuts-dialog";
 import { Button } from "#/components/ui/button";
+import { useComposer, useHotkey } from "#/lib/composer";
 import { getExtraStats } from "#/lib/extra-stats";
 import { useDeleteMeal, useMealsInRange } from "#/lib/queries";
 
@@ -46,6 +48,9 @@ function CalendarPage() {
 		previousMonthEnd,
 	);
 	const deleteMeal = useDeleteMeal();
+	const composer = useComposer();
+	useHotkey("ArrowLeft", () => setMonth((date) => subMonths(date, 1)));
+	useHotkey("ArrowRight", () => setMonth((date) => addMonths(date, 1)));
 	const extraStats = getExtraStats({
 		meals: meals ?? [],
 		previousMeals: previousMeals ?? [],
@@ -59,11 +64,8 @@ function CalendarPage() {
 	);
 
 	return (
-		<div className="flex flex-col gap-5">
-			<header className="pt-2">
-				<h1 className="font-semibold text-2xl">Diario</h1>
-			</header>
-			<DiaryTabs />
+		<div className="flex flex-col gap-5 lg:mx-auto lg:w-full lg:max-w-5xl lg:gap-6">
+			<DiaryHeader />
 
 			<div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-start lg:gap-8">
 				<div className="flex flex-col gap-5 lg:sticky lg:top-0">
@@ -74,6 +76,7 @@ function CalendarPage() {
 								size="icon"
 								onClick={() => setMonth((date) => subMonths(date, 1))}
 								aria-label="Mes anterior"
+								title="Mes anterior (←)"
 							>
 								<ChevronLeft className="size-5" />
 							</Button>
@@ -86,12 +89,17 @@ function CalendarPage() {
 								}}
 							>
 								{format(month, "MMMM yyyy", { locale: es })}
+								<span className="mt-1 hidden items-center justify-center gap-1 font-normal text-muted-foreground text-xs normal-case lg:flex">
+									<Kbd>←</Kbd>
+									<Kbd>→</Kbd> para cambiar de mes
+								</span>
 							</button>
 							<Button
 								variant="ghost"
 								size="icon"
 								onClick={() => setMonth((date) => addMonths(date, 1))}
 								aria-label="Mes siguiente"
+								title="Mes siguiente (→)"
 							>
 								<ChevronRight className="size-5" />
 							</Button>
@@ -115,7 +123,7 @@ function CalendarPage() {
 										key={day.toISOString()}
 										type="button"
 										onClick={() => setSelectedDay(day)}
-										className={`relative flex aspect-square flex-col lg:aspect-[4/3] items-center justify-center rounded-xl text-sm ${
+										className={`relative flex aspect-square flex-col lg:aspect-auto lg:h-14 items-center justify-center rounded-xl text-sm ${
 											selected
 												? "bg-primary text-primary-foreground"
 												: isSameMonth(day, month)
@@ -146,9 +154,21 @@ function CalendarPage() {
 				</div>
 
 				<section className="flex flex-col gap-3">
-					<h2 className="font-medium capitalize">
-						{format(selectedDay, "EEEE, d 'de' MMMM", { locale: es })}
-					</h2>
+					<div className="flex items-center justify-between gap-2">
+						<h2 className="font-medium capitalize">
+							{format(selectedDay, "EEEE, d 'de' MMMM", { locale: es })}
+						</h2>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							onClick={() =>
+								composer.openNew({ date: format(selectedDay, "yyyy-MM-dd") })
+							}
+						>
+							<Plus className="size-4" /> Añadir
+						</Button>
+					</div>
 					{isLoading && (
 						<p className="text-muted-foreground text-sm">Cargando…</p>
 					)}

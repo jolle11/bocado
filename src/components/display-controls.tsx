@@ -3,15 +3,19 @@ import { useImagePreference, useTheme } from "#/lib/preferences";
 
 export function DisplayControls({
 	showImageToggle = true,
+	vertical = false,
 }: {
 	showImageToggle?: boolean;
+	vertical?: boolean;
 }) {
 	const { showImages, setShowImages } = useImagePreference();
 	const { resolvedMode, setMode } = useTheme();
 	const isDark = resolvedMode === "dark";
 
 	return (
-		<fieldset className="flex items-center gap-1 rounded-full border border-border bg-card/90 p-1 shadow-sm backdrop-blur">
+		<fieldset
+			className={`flex w-fit items-center gap-1 rounded-full border border-border bg-card/90 p-1 shadow-sm backdrop-blur ${vertical ? "flex-col" : ""}`}
+		>
 			<legend className="sr-only">Controles de visualización</legend>
 			{showImageToggle && (
 				<button

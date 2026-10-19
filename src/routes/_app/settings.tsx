@@ -120,365 +120,388 @@ function SettingsPage() {
 	const minimumCustomDate = format(addDays(new Date(), 1), "yyyy-MM-dd");
 
 	return (
-		<div className="flex flex-col gap-6">
+		<div className="flex flex-col gap-6 lg:mx-auto lg:w-full lg:max-w-5xl">
 			<header className="pt-2">
-				<h1 className="font-semibold text-2xl">Ajustes</h1>
+				<h1 className="font-semibold text-2xl lg:text-3xl">Ajustes</h1>
 				<p className="text-muted-foreground text-sm">{user?.email}</p>
 			</header>
 
-			<section className="flex flex-col gap-3">
-				<div className="flex items-center gap-2">
-					<Palette className="size-4 text-muted-foreground" />
-					<h2 className="font-medium">Apariencia</h2>
-				</div>
-				<div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-					{THEME_PALETTES.map((option) => (
+			<div className="flex flex-col gap-6 lg:grid lg:grid-cols-2 lg:items-start">
+				<section
+					id="apariencia"
+					className="flex flex-col gap-3 lg:rounded-2xl lg:border lg:bg-card lg:p-5 lg:shadow-sm"
+				>
+					<div className="flex items-center gap-2">
+						<Palette className="size-4 text-muted-foreground" />
+						<h2 className="font-medium">Apariencia</h2>
+					</div>
+					<div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+						{THEME_PALETTES.map((option) => (
+							<button
+								key={option.id}
+								type="button"
+								onClick={() => setPalette(option.id)}
+								className={`flex min-w-0 flex-col items-center gap-2 rounded-xl border p-2 text-xs ${
+									palette === option.id
+										? "border-primary bg-primary/10 text-primary"
+										: "border-border text-muted-foreground"
+								}`}
+							>
+								<span
+									className="size-7 rounded-full border border-black/10 shadow-sm"
+									style={{ backgroundColor: option.swatch }}
+								/>
+								<span className="w-full min-w-0 whitespace-nowrap text-center leading-tight">
+									{option.label}
+								</span>
+							</button>
+						))}
+					</div>
+					<div className="grid grid-cols-3 rounded-xl bg-muted p-1">
 						<button
-							key={option.id}
 							type="button"
-							onClick={() => setPalette(option.id)}
-							className={`flex min-w-0 flex-col items-center gap-2 rounded-xl border p-2 text-xs ${
-								palette === option.id
-									? "border-primary bg-primary/10 text-primary"
-									: "border-border text-muted-foreground"
+							onClick={() => setMode("system")}
+							className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm ${
+								mode === "system"
+									? "bg-card font-medium text-foreground shadow-sm"
+									: "text-muted-foreground"
 							}`}
 						>
-							<span
-								className="size-7 rounded-full border border-black/10 shadow-sm"
-								style={{ backgroundColor: option.swatch }}
-							/>
-							<span className="w-full min-w-0 whitespace-nowrap text-center leading-tight">
-								{option.label}
-							</span>
+							<Monitor className="size-4" /> Automático
 						</button>
-					))}
-				</div>
-				<div className="grid grid-cols-3 rounded-xl bg-muted p-1">
-					<button
-						type="button"
-						onClick={() => setMode("system")}
-						className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm ${
-							mode === "system"
-								? "bg-card font-medium text-foreground shadow-sm"
-								: "text-muted-foreground"
-						}`}
-					>
-						<Monitor className="size-4" /> Automático
-					</button>
-					<button
-						type="button"
-						onClick={() => setMode("light")}
-						className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm ${
-							mode === "light"
-								? "bg-card font-medium text-foreground shadow-sm"
-								: "text-muted-foreground"
-						}`}
-					>
-						<Sun className="size-4" /> Claro
-					</button>
-					<button
-						type="button"
-						onClick={() => setMode("dark")}
-						className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm ${
-							mode === "dark"
-								? "bg-card font-medium text-foreground shadow-sm"
-								: "text-muted-foreground"
-						}`}
-					>
-						<Moon className="size-4" /> Oscuro
-					</button>
-				</div>
-			</section>
-
-			<section className="flex flex-col gap-3">
-				<div className="flex items-center gap-2">
-					<Bell className="size-4 text-muted-foreground" />
-					<div>
-						<h2 className="font-medium">Recordatorios de comidas</h2>
-						<p className="text-muted-foreground text-sm">
-							Recibe un aviso si aún no has registrado esa comida.
-						</p>
+						<button
+							type="button"
+							onClick={() => setMode("light")}
+							className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm ${
+								mode === "light"
+									? "bg-card font-medium text-foreground shadow-sm"
+									: "text-muted-foreground"
+							}`}
+						>
+							<Sun className="size-4" /> Claro
+						</button>
+						<button
+							type="button"
+							onClick={() => setMode("dark")}
+							className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm ${
+								mode === "dark"
+									? "bg-card font-medium text-foreground shadow-sm"
+									: "text-muted-foreground"
+							}`}
+						>
+							<Moon className="size-4" /> Oscuro
+						</button>
 					</div>
-				</div>
-				<Button
-					variant="outline"
-					className="justify-start"
-					onClick={toggleReminders}
-					disabled={
-						pushPending || (!reminders.enabled && !supportsPushNotifications())
-					}
+				</section>
+
+				<section
+					id="recordatorios"
+					className="flex flex-col gap-3 lg:rounded-2xl lg:border lg:bg-card lg:p-5 lg:shadow-sm"
 				>
-					{reminders.enabled ? (
-						<BellOff className="size-4" />
-					) : (
-						<Bell className="size-4" />
+					<div className="flex items-center gap-2">
+						<Bell className="size-4 text-muted-foreground" />
+						<div>
+							<h2 className="font-medium">Recordatorios de comidas</h2>
+							<p className="text-muted-foreground text-sm">
+								Recibe un aviso si aún no has registrado esa comida.
+							</p>
+						</div>
+					</div>
+					<Button
+						variant="outline"
+						className="justify-start"
+						onClick={toggleReminders}
+						disabled={
+							pushPending ||
+							(!reminders.enabled && !supportsPushNotifications())
+						}
+					>
+						{reminders.enabled ? (
+							<BellOff className="size-4" />
+						) : (
+							<Bell className="size-4" />
+						)}
+						{reminders.enabled
+							? "Desactivar recordatorios"
+							: "Activar recordatorios"}
+					</Button>
+					{!supportsPushNotifications() && (
+						<p className="text-muted-foreground text-xs">
+							Este navegador no admite Web Push. En iPhone, instala primero
+							Bocado en la pantalla de inicio.
+						</p>
 					)}
-					{reminders.enabled
-						? "Desactivar recordatorios"
-						: "Activar recordatorios"}
-				</Button>
-				{!supportsPushNotifications() && (
-					<p className="text-muted-foreground text-xs">
-						Este navegador no admite Web Push. En iPhone, instala primero Bocado
-						en la pantalla de inicio.
-					</p>
-				)}
-				{pushError && <p className="text-destructive text-xs">{pushError}</p>}
-				{reminders.enabled && (
-					<div className="flex flex-col gap-3 rounded-xl border p-3">
-						{(["desayuno", "comida", "cena"] as const).map((meal) => {
-							const labels = {
-								desayuno: "Desayuno",
-								comida: "Comida",
-								cena: "Cena",
-							};
-							const preference = reminders.meals[meal];
-							return (
-								<div key={meal} className="flex items-center gap-3">
-									<button
-										type="button"
-										className={`flex-1 rounded-lg border px-3 py-2 text-left text-sm ${preference.enabled ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground"}`}
-										onClick={() =>
-											setReminders({
-												...reminders,
-												meals: {
-													...reminders.meals,
-													[meal]: {
-														...preference,
-														enabled: !preference.enabled,
+					{pushError && <p className="text-destructive text-xs">{pushError}</p>}
+					{reminders.enabled && (
+						<div className="flex flex-col gap-3 rounded-xl border p-3">
+							{(["desayuno", "comida", "cena"] as const).map((meal) => {
+								const labels = {
+									desayuno: "Desayuno",
+									comida: "Comida",
+									cena: "Cena",
+								};
+								const preference = reminders.meals[meal];
+								return (
+									<div key={meal} className="flex items-center gap-3">
+										<button
+											type="button"
+											className={`flex-1 rounded-lg border px-3 py-2 text-left text-sm ${preference.enabled ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground"}`}
+											onClick={() =>
+												setReminders({
+													...reminders,
+													meals: {
+														...reminders.meals,
+														[meal]: {
+															...preference,
+															enabled: !preference.enabled,
+														},
 													},
-												},
-											})
-										}
-									>
-										{labels[meal]}
-									</button>
-									<Input
-										type="time"
-										aria-label={`Hora del recordatorio de ${labels[meal].toLowerCase()}`}
-										className="w-32"
-										value={preference.time}
-										disabled={!preference.enabled}
-										onChange={(event) =>
-											setReminders({
-												...reminders,
-												meals: {
-													...reminders.meals,
-													[meal]: { ...preference, time: event.target.value },
-												},
-											})
-										}
-									/>
-								</div>
-							);
-						})}
-						<p className="text-muted-foreground text-xs">
-							Zona horaria: {reminders.timeZone}
-						</p>
-					</div>
-				)}
-			</section>
-
-			<section className="flex flex-col gap-3">
-				<div>
-					<h2 className="font-medium">Fotos en el diario</h2>
-					<p className="text-muted-foreground text-sm">
-						Ocúltalas para ver más comidas a la vez. No se borrará ninguna.
-					</p>
-				</div>
-				<Button
-					variant="outline"
-					onClick={() => setShowImages(!showImages)}
-					className="justify-start"
-				>
-					{showImages ? (
-						<Eye className="size-4" />
-					) : (
-						<EyeOff className="size-4" />
+												})
+											}
+										>
+											{labels[meal]}
+										</button>
+										<Input
+											type="time"
+											aria-label={`Hora del recordatorio de ${labels[meal].toLowerCase()}`}
+											className="w-32"
+											value={preference.time}
+											disabled={!preference.enabled}
+											onChange={(event) =>
+												setReminders({
+													...reminders,
+													meals: {
+														...reminders.meals,
+														[meal]: {
+															...preference,
+															time: event.target.value,
+														},
+													},
+												})
+											}
+										/>
+									</div>
+								);
+							})}
+							<p className="text-muted-foreground text-xs">
+								Zona horaria: {reminders.timeZone}
+							</p>
+						</div>
 					)}
-					{showImages ? "Las fotos están visibles" : "Las fotos están ocultas"}
-				</Button>
-			</section>
+				</section>
 
-			<section className="flex flex-col gap-3">
-				<div>
-					<h2 className="font-medium">Compartir con tu nutricionista</h2>
-					<p className="text-muted-foreground text-sm">
-						Crea un enlace de solo lectura con todo tu diario. Puedes revocarlo
-						cuando quieras.
-					</p>
-				</div>
-
-				{links?.map((link) => (
-					<Card key={link.id} className="py-0">
-						<CardContent className="flex items-center gap-2 p-3">
-							<LinkIcon className="size-4 shrink-0 text-muted-foreground" />
-							<div className="min-w-0 flex-1">
-								<code className="block truncate text-xs">
-									/share/{link.token}
-								</code>
-								<p className="mt-1 text-muted-foreground text-xs">
-									{link.expires_at
-										? new Date(link.expires_at) <= new Date()
-											? "Caducado"
-											: `Caduca ${format(new Date(link.expires_at), "d MMM yyyy, HH:mm", { locale: es })}`
-										: "No caduca"}
-								</p>
-								<p className="text-muted-foreground text-xs">
-									{link.visible_from || link.visible_until
-										? `Visible: ${link.visible_from ? format(new Date(link.visible_from), "d MMM yyyy", { locale: es }) : "inicio"} – ${link.visible_until ? format(new Date(link.visible_until), "d MMM yyyy", { locale: es }) : "hoy"}`
-										: "Todo el diario visible"}
-								</p>
-							</div>
-							<Button
-								variant="ghost"
-								size="icon"
-								onClick={() => copy(link.token)}
-								aria-label="Copiar enlace"
-							>
-								{copied === link.token ? (
-									<Check className="size-4 text-primary" />
-								) : (
-									<Copy className="size-4" />
-								)}
-							</Button>
-							<Button
-								variant="ghost"
-								size="icon"
-								onClick={() => deleteLink.mutate(link.id)}
-								aria-label="Revocar enlace"
-							>
-								<Trash2 className="size-4" />
-							</Button>
-						</CardContent>
-					</Card>
-				))}
-
-				<div className="flex flex-col gap-2">
-					<Label>Duración del nuevo enlace</Label>
-					<div className="grid grid-cols-2 gap-2">
-						{[
-							{ value: "day", label: "1 día" },
-							{ value: "week", label: "1 semana" },
-							{ value: "forever", label: "Indefinido" },
-							{ value: "custom", label: "Fecha concreta" },
-						].map((option) => (
-							<button
-								key={option.value}
-								type="button"
-								onClick={() =>
-									setDuration(
-										option.value as "day" | "week" | "forever" | "custom",
-									)
-								}
-								className={`rounded-xl border px-3 py-2 text-sm ${
-									duration === option.value
-										? "border-primary bg-primary/10 font-medium text-primary"
-										: "border-border text-muted-foreground"
-								}`}
-							>
-								{option.label}
-							</button>
-						))}
-					</div>
-				</div>
-
-				{duration === "custom" && (
-					<div className="flex flex-col gap-2">
-						<Label htmlFor="share-expiry">Disponible hasta</Label>
-						<Input
-							id="share-expiry"
-							type="date"
-							min={minimumCustomDate}
-							value={customDate}
-							onChange={(event) => setCustomDate(event.target.value)}
-						/>
-						<p className="text-muted-foreground text-xs">
-							El enlace caducará al terminar ese día.
+				<section
+					id="fotos"
+					className="flex flex-col gap-3 lg:rounded-2xl lg:border lg:bg-card lg:p-5 lg:shadow-sm"
+				>
+					<div>
+						<h2 className="font-medium">Fotos en el diario</h2>
+						<p className="text-muted-foreground text-sm">
+							Ocúltalas para ver más comidas a la vez. No se borrará ninguna.
 						</p>
 					</div>
-				)}
+					<Button
+						variant="outline"
+						onClick={() => setShowImages(!showImages)}
+						className="justify-start"
+					>
+						{showImages ? (
+							<Eye className="size-4" />
+						) : (
+							<EyeOff className="size-4" />
+						)}
+						{showImages
+							? "Las fotos están visibles"
+							: "Las fotos están ocultas"}
+					</Button>
+				</section>
 
-				<div className="flex flex-col gap-2">
-					<Label>Periodo visible del diario</Label>
-					<div className="grid grid-cols-2 gap-2">
-						{[
-							{ value: "forever", label: "Indefinido" },
-							{ value: "custom", label: "Elegir periodo" },
-						].map((option) => (
-							<button
-								key={option.value}
-								type="button"
-								onClick={() =>
-									setVisibility(option.value as "forever" | "custom")
-								}
-								className={`rounded-xl border px-3 py-2 text-sm ${
-									visibility === option.value
-										? "border-primary bg-primary/10 font-medium text-primary"
-										: "border-border text-muted-foreground"
-								}`}
-							>
-								{option.label}
-							</button>
-						))}
-					</div>
-					<p className="text-muted-foreground text-xs">
-						Define qué parte del diario podrá consultar quien abra el enlace.
-					</p>
-				</div>
-
-				{visibility === "custom" && (
-					<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-						<div className="flex min-w-0 flex-col gap-2">
-							<Label htmlFor="share-visible-from">Desde</Label>
-							<Input
-								id="share-visible-from"
-								type="date"
-								className="max-w-full"
-								max={visibleUntil || undefined}
-								value={visibleFrom}
-								onChange={(event) => setVisibleFrom(event.target.value)}
-							/>
-						</div>
-						<div className="flex min-w-0 flex-col gap-2">
-							<Label htmlFor="share-visible-until">Hasta</Label>
-							<Input
-								id="share-visible-until"
-								type="date"
-								className="max-w-full"
-								min={visibleFrom || undefined}
-								value={visibleUntil}
-								onChange={(event) => setVisibleUntil(event.target.value)}
-							/>
-						</div>
-					</div>
-				)}
-
-				<Button
-					variant="outline"
-					onClick={createShareLink}
-					disabled={
-						createLink.isPending ||
-						(duration === "custom" && !customDate) ||
-						(visibility === "custom" && (!visibleFrom || !visibleUntil))
-					}
+				<section
+					id="compartir"
+					className="flex flex-col gap-3 lg:rounded-2xl lg:border lg:bg-card lg:p-5 lg:shadow-sm"
 				>
-					<CalendarClock className="size-4" /> Crear enlace para compartir
-				</Button>
-			</section>
+					<div>
+						<h2 className="font-medium">Compartir con tu nutricionista</h2>
+						<p className="text-muted-foreground text-sm">
+							Crea un enlace de solo lectura con todo tu diario. Puedes
+							revocarlo cuando quieras.
+						</p>
+					</div>
 
-			<section className="mt-4">
-				<Button
-					variant="destructive"
-					className="w-full"
-					onClick={() => {
-						logout();
-						navigate({ to: "/login" });
-					}}
+					{links?.map((link) => (
+						<Card key={link.id} className="py-0">
+							<CardContent className="flex items-center gap-2 p-3">
+								<LinkIcon className="size-4 shrink-0 text-muted-foreground" />
+								<div className="min-w-0 flex-1">
+									<code className="block truncate text-xs">
+										/share/{link.token}
+									</code>
+									<p className="mt-1 text-muted-foreground text-xs">
+										{link.expires_at
+											? new Date(link.expires_at) <= new Date()
+												? "Caducado"
+												: `Caduca ${format(new Date(link.expires_at), "d MMM yyyy, HH:mm", { locale: es })}`
+											: "No caduca"}
+									</p>
+									<p className="text-muted-foreground text-xs">
+										{link.visible_from || link.visible_until
+											? `Visible: ${link.visible_from ? format(new Date(link.visible_from), "d MMM yyyy", { locale: es }) : "inicio"} – ${link.visible_until ? format(new Date(link.visible_until), "d MMM yyyy", { locale: es }) : "hoy"}`
+											: "Todo el diario visible"}
+									</p>
+								</div>
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={() => copy(link.token)}
+									aria-label="Copiar enlace"
+								>
+									{copied === link.token ? (
+										<Check className="size-4 text-primary" />
+									) : (
+										<Copy className="size-4" />
+									)}
+								</Button>
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={() => deleteLink.mutate(link.id)}
+									aria-label="Revocar enlace"
+								>
+									<Trash2 className="size-4" />
+								</Button>
+							</CardContent>
+						</Card>
+					))}
+
+					<div className="flex flex-col gap-2">
+						<Label>Duración del nuevo enlace</Label>
+						<div className="grid grid-cols-2 gap-2">
+							{[
+								{ value: "day", label: "1 día" },
+								{ value: "week", label: "1 semana" },
+								{ value: "forever", label: "Indefinido" },
+								{ value: "custom", label: "Fecha concreta" },
+							].map((option) => (
+								<button
+									key={option.value}
+									type="button"
+									onClick={() =>
+										setDuration(
+											option.value as "day" | "week" | "forever" | "custom",
+										)
+									}
+									className={`rounded-xl border px-3 py-2 text-sm ${
+										duration === option.value
+											? "border-primary bg-primary/10 font-medium text-primary"
+											: "border-border text-muted-foreground"
+									}`}
+								>
+									{option.label}
+								</button>
+							))}
+						</div>
+					</div>
+
+					{duration === "custom" && (
+						<div className="flex flex-col gap-2">
+							<Label htmlFor="share-expiry">Disponible hasta</Label>
+							<Input
+								id="share-expiry"
+								type="date"
+								min={minimumCustomDate}
+								value={customDate}
+								onChange={(event) => setCustomDate(event.target.value)}
+							/>
+							<p className="text-muted-foreground text-xs">
+								El enlace caducará al terminar ese día.
+							</p>
+						</div>
+					)}
+
+					<div className="flex flex-col gap-2">
+						<Label>Periodo visible del diario</Label>
+						<div className="grid grid-cols-2 gap-2">
+							{[
+								{ value: "forever", label: "Indefinido" },
+								{ value: "custom", label: "Elegir periodo" },
+							].map((option) => (
+								<button
+									key={option.value}
+									type="button"
+									onClick={() =>
+										setVisibility(option.value as "forever" | "custom")
+									}
+									className={`rounded-xl border px-3 py-2 text-sm ${
+										visibility === option.value
+											? "border-primary bg-primary/10 font-medium text-primary"
+											: "border-border text-muted-foreground"
+									}`}
+								>
+									{option.label}
+								</button>
+							))}
+						</div>
+						<p className="text-muted-foreground text-xs">
+							Define qué parte del diario podrá consultar quien abra el enlace.
+						</p>
+					</div>
+
+					{visibility === "custom" && (
+						<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+							<div className="flex min-w-0 flex-col gap-2">
+								<Label htmlFor="share-visible-from">Desde</Label>
+								<Input
+									id="share-visible-from"
+									type="date"
+									className="max-w-full"
+									max={visibleUntil || undefined}
+									value={visibleFrom}
+									onChange={(event) => setVisibleFrom(event.target.value)}
+								/>
+							</div>
+							<div className="flex min-w-0 flex-col gap-2">
+								<Label htmlFor="share-visible-until">Hasta</Label>
+								<Input
+									id="share-visible-until"
+									type="date"
+									className="max-w-full"
+									min={visibleFrom || undefined}
+									value={visibleUntil}
+									onChange={(event) => setVisibleUntil(event.target.value)}
+								/>
+							</div>
+						</div>
+					)}
+
+					<Button
+						variant="outline"
+						onClick={createShareLink}
+						disabled={
+							createLink.isPending ||
+							(duration === "custom" && !customDate) ||
+							(visibility === "custom" && (!visibleFrom || !visibleUntil))
+						}
+					>
+						<CalendarClock className="size-4" /> Crear enlace para compartir
+					</Button>
+				</section>
+
+				<section
+					id="cuenta"
+					className="mt-4 lg:col-span-2 lg:mt-0 lg:flex lg:justify-end"
 				>
-					<LogOut className="size-4" /> Cerrar sesión
-				</Button>
-			</section>
+					<Button
+						variant="destructive"
+						className="w-full lg:w-auto"
+						onClick={() => {
+							logout();
+							navigate({ to: "/login" });
+						}}
+					>
+						<LogOut className="size-4" /> Cerrar sesión
+					</Button>
+				</section>
+			</div>
 		</div>
 	);
 }

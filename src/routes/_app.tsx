@@ -9,20 +9,27 @@ import {
 import {
 	ArrowUp,
 	CalendarDays,
+	Keyboard,
+	PanelLeftClose,
+	PanelLeftOpen,
 	Plus,
 	Settings,
 	UtensilsCrossed,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { AppLoadingShell } from "#/components/app-loading-shell";
+import { ComposerSheet } from "#/components/composer-sheet";
 import { DisplayControls } from "#/components/display-controls";
+import { Kbd, ShortcutsDialog } from "#/components/shortcuts-dialog";
 import { Button } from "#/components/ui/button";
 import { useAuth } from "#/lib/auth";
+import { useComposer, useHotkey, validateComposerSearch } from "#/lib/composer";
 import { pb } from "#/lib/pocketbase";
 import { usePreferencesSync } from "#/lib/preferences";
 
 export const Route = createFileRoute("/_app")({
 	head: () => ({ meta: [{ name: "robots", content: "noindex, nofollow" }] }),
+	validateSearch: validateComposerSearch,
 	beforeLoad: () => {
 		if (typeof window !== "undefined" && !pb.authStore.isValid) {
 			throw redirect({ to: "/login" });
@@ -39,7 +46,10 @@ function AppLayout() {
 	});
 	const mainRef = useRef<HTMLElement>(null);
 	const [showScrollToTop, setShowScrollToTop] = useState(false);
+	const search = Route.useSearch();
+	const composer = useComposer();
 	usePreferencesSync();
+	useHotkey("n", () => composer.openNew(), isLoggedIn);
 	const isHistoryPage = pathname === "/history";
 
 	const scrollToTop = () => {
@@ -63,7 +73,8 @@ function AppLayout() {
 
 	return (
 		<div className="relative mx-auto flex h-dvh w-full max-w-lg flex-col overflow-hidden lg:max-w-none lg:flex-row">
-			<DesktopSidebar />
+			<DesktopSidebar onAdd={() => composer.openNew()} />
+			<ComposerSheet search={search} onClose={composer.close} />
 			<main
 				ref={mainRef}
 				className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 pt-4 pb-4 lg:px-10 lg:pt-8 lg:pb-10"
@@ -154,38 +165,114 @@ function NavItem({
 	);
 }
 
-function DesktopSidebar() {
+const SIDEBAR_COLLAPSED_KEY = "bocado:sidebar-collapsed";
+
+function DesktopSidebar({ onAdd }: { onAdd: () => void }) {
+	const [collapsed, setCollapsed] = useState(false);
+	const [shortcutsOpen, setShortcutsOpen] = useState(false);
+
+	useEffect(() => {
+		setCollapsed(localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1");
+	}, []);
+
+	const toggleCollapsed = () => {
+		setCollapsed((current) => {
+			localStorage.setItem(SIDEBAR_COLLAPSED_KEY, current ? "0" : "1");
+			return !current;
+		});
+	};
+
+	useHotkey("[", toggleCollapsed);
+	useHotkey("?", () => setShortcutsOpen(true));
+
 	return (
-		<aside className="hidden w-64 shrink-0 flex-col gap-6 border-border border-r bg-card/60 px-4 py-6 lg:flex">
-			<Link to="/app" className="px-3 font-semibold text-2xl text-primary">
-				Bocado
-			</Link>
-			<Button asChild size="lg" className="w-full justify-start">
-				<Link to="/new" search={{ mealType: undefined }}>
-					<Plus className="size-5" /> Añadir comida
+		<aside
+			className={`hidden shrink-0 flex-col gap-6 border-border border-r bg-card/60 py-6 transition-[width] duration-200 lg:flex ${
+				collapsed ? "w-[4.5rem] items-center px-3" : "w-64 px-4"
+			}`}
+		>
+			<div
+				className={`flex items-center ${collapsed ? "flex-col gap-3" : "justify-between"}`}
+			>
+				<Link
+					to="/app"
+					className={`font-semibold text-primary ${collapsed ? "text-xl" : "px-3 text-2xl"}`}
+					aria-label="Bocado"
+				>
+					{collapsed ? "B" : "Bocado"}
 				</Link>
+				<button
+					type="button"
+					onClick={toggleCollapsed}
+					className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+					aria-label={collapsed ? "Expandir menú" : "Colapsar menú"}
+					title={`${collapsed ? "Expandir" : "Colapsar"} menú ([)`}
+				>
+					{collapsed ? (
+						<PanelLeftOpen className="size-4" />
+					) : (
+						<PanelLeftClose className="size-4" />
+					)}
+				</button>
+			</div>
+			<Button
+				type="button"
+				size={collapsed ? "icon" : "lg"}
+				className={collapsed ? "size-10" : "w-full justify-start"}
+				onClick={onAdd}
+				title="Añadir comida (N)"
+				aria-label="Añadir comida"
+			>
+				<Plus className="size-5" />
+				{!collapsed && (
+					<>
+						Añadir comida
+						<Kbd className="ml-auto border-primary-foreground/30 text-primary-foreground/80">
+							N
+						</Kbd>
+					</>
+				)}
 			</Button>
-			<nav className="flex flex-col gap-1" aria-label="Navegación principal">
+			<nav
+				className="flex w-full flex-col gap-1"
+				aria-label="Navegación principal"
+			>
 				<SidebarItem
 					to="/app"
 					icon={<UtensilsCrossed className="size-4" />}
 					label="Hoy"
+					collapsed={collapsed}
 				/>
 				<SidebarItem
 					to="/history"
 					icon={<CalendarDays className="size-4" />}
 					label="Diario"
 					matches={["/history", "/week", "/calendar"]}
+					collapsed={collapsed}
 				/>
 				<SidebarItem
 					to="/settings"
 					icon={<Settings className="size-4" />}
 					label="Ajustes"
+					collapsed={collapsed}
 				/>
 			</nav>
-			<div className="mt-auto">
-				<DisplayControls />
+			<div
+				className={`mt-auto flex gap-3 ${collapsed ? "flex-col items-center" : "items-center justify-between"}`}
+			>
+				<DisplayControls vertical={collapsed} />
+				<button
+					type="button"
+					onClick={() => setShortcutsOpen(true)}
+					className="flex items-center gap-2 rounded-md px-2 py-1.5 text-muted-foreground text-xs hover:bg-accent hover:text-foreground"
+					aria-label="Atajos de teclado"
+					title="Atajos de teclado (?)"
+				>
+					<Keyboard className="size-4" />
+					{!collapsed && <Kbd>?</Kbd>}
+				</button>
 			</div>
+			<ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
 		</aside>
 	);
 }
@@ -195,11 +282,13 @@ function SidebarItem({
 	icon,
 	label,
 	matches,
+	collapsed,
 }: {
 	to: string;
 	icon: React.ReactNode;
 	label: string;
 	matches?: string[];
+	collapsed: boolean;
 }) {
 	const pathname = useRouterState({
 		select: (state) => state.location.pathname,
@@ -209,14 +298,18 @@ function SidebarItem({
 	return (
 		<Link
 			to={to}
-			className={`flex items-center gap-3 rounded-lg px-3 py-2 font-medium text-sm transition-colors ${
+			title={collapsed ? label : undefined}
+			aria-label={collapsed ? label : undefined}
+			className={`flex items-center gap-3 rounded-lg py-2 font-medium text-sm transition-colors ${
+				collapsed ? "justify-center px-0" : "px-3"
+			} ${
 				isActive
 					? "bg-primary/10 text-primary"
 					: "text-muted-foreground hover:bg-accent hover:text-foreground"
 			}`}
 		>
 			{icon}
-			{label}
+			{!collapsed && label}
 		</Link>
 	);
 }

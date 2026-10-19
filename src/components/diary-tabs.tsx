@@ -8,7 +8,7 @@ const tabs = [
 
 export function DiaryTabs() {
 	return (
-		<div className="grid grid-cols-3 rounded-xl bg-muted p-1 lg:max-w-md">
+		<div className="grid grid-cols-3 rounded-xl bg-muted p-1 lg:w-80">
 			{tabs.map((tab) => (
 				<Link
 					key={tab.to}
@@ -19,6 +19,15 @@ export function DiaryTabs() {
 					{tab.label}
 				</Link>
 			))}
+		</div>
+	);
+}
+
+export function DiaryHeader() {
+	return (
+		<div className="flex flex-col gap-5 pt-2 lg:flex-row lg:items-center lg:justify-between">
+			<h1 className="font-semibold text-2xl lg:text-3xl">Diario</h1>
+			<DiaryTabs />
 		</div>
 	);
 }

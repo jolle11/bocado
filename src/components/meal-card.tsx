@@ -12,6 +12,7 @@ import { useState } from "react";
 import { MealPreviewDialog } from "#/components/meal-preview-dialog";
 import { Badge } from "#/components/ui/badge";
 import { Card, CardContent } from "#/components/ui/card";
+import { useComposer } from "#/lib/composer";
 import { useImagePreference } from "#/lib/preferences";
 import { MEAL_TYPE_LABELS, type Meal, normalizeEntryType } from "#/lib/types";
 
@@ -190,6 +191,8 @@ function EntryActions({
 	mealId: string;
 	onDelete: (id: string) => void;
 }) {
+	const composer = useComposer();
+
 	return (
 		<div className="relative z-20 flex shrink-0 gap-1">
 			<Link
@@ -197,7 +200,12 @@ function EntryActions({
 				params={{ mealId }}
 				className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
 				aria-label="Editar entrada"
-				onClick={(event) => event.stopPropagation()}
+				title="Editar"
+				onClick={(event) => {
+					event.stopPropagation();
+					event.preventDefault();
+					composer.openEdit(mealId);
+				}}
 				onKeyDown={(event) => event.stopPropagation()}
 			>
 				<Pencil className="size-4" />
@@ -209,6 +217,7 @@ function EntryActions({
 				onKeyDown={(event) => event.stopPropagation()}
 				className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-destructive"
 				aria-label="Borrar entrada"
+				title="Borrar"
 			>
 				<Trash2 className="size-4" />
 			</button>

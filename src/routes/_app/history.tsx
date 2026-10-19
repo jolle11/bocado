@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { DiaryTabs } from "#/components/diary-tabs";
+import { DiaryHeader } from "#/components/diary-tabs";
 import { MealCard } from "#/components/meal-card";
 import { Button } from "#/components/ui/button";
 import { useDeleteMeal, useMealHistory } from "#/lib/queries";
@@ -29,11 +29,8 @@ function HistoryPage() {
 	const meals = data?.pages.flatMap((page) => page.items) ?? [];
 
 	return (
-		<div className="flex flex-col gap-6">
-			<header className="pt-2">
-				<h1 className="font-semibold text-2xl">Diario</h1>
-			</header>
-			<DiaryTabs />
+		<div className="flex flex-col gap-6 lg:mx-auto lg:w-full lg:max-w-5xl">
+			<DiaryHeader />
 
 			{isLoading && <p className="text-muted-foreground text-sm">Cargando…</p>}
 
@@ -44,11 +41,14 @@ function HistoryPage() {
 			)}
 
 			{groupByDay(meals).map(([day, dayMeals]) => (
-				<section key={day} className="flex flex-col gap-3">
-					<h2 className="font-medium text-muted-foreground text-sm capitalize">
+				<section
+					key={day}
+					className="flex flex-col gap-3 lg:grid lg:grid-cols-[10rem_minmax(0,1fr)] lg:gap-6 lg:border-border lg:border-t lg:pt-5"
+				>
+					<h2 className="font-medium text-muted-foreground text-sm capitalize lg:sticky lg:top-0 lg:pt-1">
 						{format(new Date(day), "EEEE, d 'de' MMMM", { locale: es })}
 					</h2>
-					<div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
+					<div className="grid gap-3 xl:grid-cols-2">
 						{dayMeals.map((meal) => (
 							<MealCard
 								key={meal.id}

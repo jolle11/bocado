@@ -5,6 +5,7 @@ import { CircleAlert, Droplets, Pencil, Sparkles, X } from "lucide-react";
 import { Dialog } from "radix-ui";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
+import { useComposer } from "#/lib/composer";
 import {
 	ENTRY_TYPE_LABELS,
 	MEAL_TYPE_LABELS,
@@ -21,6 +22,7 @@ export function MealPreviewDialog({
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 }) {
+	const composer = useComposer();
 	const entryType = normalizeEntryType(meal.entry_type);
 	const photos = meal.photos?.length
 		? meal.photos
@@ -125,7 +127,15 @@ export function MealPreviewDialog({
 							<Button variant="outline">Cerrar</Button>
 						</Dialog.Close>
 						<Button asChild>
-							<Link to="/edit/$mealId" params={{ mealId: meal.id }}>
+							<Link
+								to="/edit/$mealId"
+								params={{ mealId: meal.id }}
+								onClick={(event) => {
+									event.preventDefault();
+									onOpenChange(false);
+									composer.openEdit(meal.id);
+								}}
+							>
 								<Pencil className="size-4" />
 								Editar
 							</Link>

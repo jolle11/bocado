@@ -10,10 +10,12 @@ import {
 import { es } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
-import { DiaryTabs } from "#/components/diary-tabs";
+import { DiaryHeader } from "#/components/diary-tabs";
 import { ExtraSummary } from "#/components/extra-summary";
 import { MealCard } from "#/components/meal-card";
+import { Kbd } from "#/components/shortcuts-dialog";
 import { Button } from "#/components/ui/button";
+import { useHotkey } from "#/lib/composer";
 import { getExtraStats } from "#/lib/extra-stats";
 import { useDeleteMeal, useMealsInRange } from "#/lib/queries";
 
@@ -33,6 +35,8 @@ function WeekPage() {
 		previousWeekEnd,
 	);
 	const deleteMeal = useDeleteMeal();
+	useHotkey("ArrowLeft", () => setAnchor((date) => subWeeks(date, 1)));
+	useHotkey("ArrowRight", () => setAnchor((date) => addWeeks(date, 1)));
 	const extraStats = getExtraStats({
 		meals: meals ?? [],
 		previousMeals: previousMeals ?? [],
@@ -48,51 +52,56 @@ function WeekPage() {
 	});
 
 	return (
-		<div className="flex flex-col gap-5">
-			<header className="pt-2">
-				<h1 className="font-semibold text-2xl">Diario</h1>
-			</header>
-			<DiaryTabs />
-			<div className="flex items-center justify-between">
-				<Button
-					variant="ghost"
-					size="icon"
-					onClick={() => setAnchor((date) => subWeeks(date, 1))}
-					aria-label="Semana anterior"
-				>
-					<ChevronLeft className="size-5" />
-				</Button>
-				<div className="text-center">
-					<p className="font-medium text-sm">
-						{format(weekStart, "d MMM", { locale: es })} –{" "}
-						{format(weekEnd, "d MMM yyyy", { locale: es })}
-					</p>
-					<button
-						type="button"
-						onClick={() => setAnchor(new Date())}
-						className="text-primary text-xs"
+		<div className="flex flex-col gap-5 lg:mx-auto lg:w-full lg:max-w-5xl lg:gap-6">
+			<DiaryHeader />
+			<div className="flex flex-col gap-5 lg:grid lg:grid-cols-2 lg:items-center lg:gap-6">
+				<div className="flex items-center justify-between lg:rounded-2xl lg:border lg:bg-card lg:p-3 lg:shadow-sm">
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={() => setAnchor((date) => subWeeks(date, 1))}
+						aria-label="Semana anterior"
+						title="Semana anterior (←)"
 					>
-						Volver a esta semana
-					</button>
+						<ChevronLeft className="size-5" />
+					</Button>
+					<div className="text-center">
+						<p className="font-medium text-sm">
+							{format(weekStart, "d MMM", { locale: es })} –{" "}
+							{format(weekEnd, "d MMM yyyy", { locale: es })}
+						</p>
+						<button
+							type="button"
+							onClick={() => setAnchor(new Date())}
+							className="text-primary text-xs"
+						>
+							Volver a esta semana
+						</button>
+						<p className="mt-1 hidden items-center justify-center gap-1 text-muted-foreground text-xs lg:flex">
+							<Kbd>←</Kbd>
+							<Kbd>→</Kbd> para cambiar de semana
+						</p>
+					</div>
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={() => setAnchor((date) => addWeeks(date, 1))}
+						aria-label="Semana siguiente"
+						title="Semana siguiente (→)"
+					>
+						<ChevronRight className="size-5" />
+					</Button>
 				</div>
-				<Button
-					variant="ghost"
-					size="icon"
-					onClick={() => setAnchor((date) => addWeeks(date, 1))}
-					aria-label="Semana siguiente"
-				>
-					<ChevronRight className="size-5" />
-				</Button>
+
+				<ExtraSummary
+					stats={extraStats}
+					period="semana"
+					isLoading={isLoading || isPreviousLoading}
+				/>
 			</div>
 
-			<ExtraSummary
-				stats={extraStats}
-				period="semana"
-				isLoading={isLoading || isPreviousLoading}
-			/>
-
 			{isLoading && <p className="text-muted-foreground text-sm">Cargando…</p>}
-			<div className="flex flex-col gap-5 lg:grid lg:grid-cols-2 lg:gap-6 2xl:grid-cols-3">
+			<div className="flex flex-col gap-5 lg:grid lg:grid-cols-2 lg:gap-6">
 				{days.map((day) => {
 					const dayMeals = (meals ?? []).filter((meal) =>
 						isSameDay(new Date(meal.eaten_at), day),

@@ -117,19 +117,33 @@ function SettingsPage() {
 		});
 	}
 
+	const handleLogout = () => {
+		logout();
+		navigate({ to: "/login" });
+	};
+
 	const minimumCustomDate = format(addDays(new Date(), 1), "yyyy-MM-dd");
 
 	return (
 		<div className="flex flex-col gap-6 lg:mx-auto lg:w-full lg:max-w-5xl">
-			<header className="pt-2">
-				<h1 className="font-semibold text-2xl lg:text-3xl">Ajustes</h1>
-				<p className="text-muted-foreground text-sm">{user?.email}</p>
+			<header className="flex items-end justify-between gap-4 pt-2">
+				<div>
+					<h1 className="font-semibold text-2xl lg:text-3xl">Ajustes</h1>
+					<p className="text-muted-foreground text-sm">{user?.email}</p>
+				</div>
+				<Button
+					variant="outline"
+					className="hidden text-destructive hover:text-destructive lg:inline-flex"
+					onClick={handleLogout}
+				>
+					<LogOut className="size-4" /> Cerrar sesión
+				</Button>
 			</header>
 
-			<div className="flex flex-col gap-6 lg:grid lg:grid-cols-2 lg:items-start">
+			<div className="flex flex-col gap-6 lg:grid lg:grid-cols-2 lg:items-start lg:gap-5">
 				<section
 					id="apariencia"
-					className="flex flex-col gap-3 lg:rounded-2xl lg:border lg:bg-card lg:p-5 lg:shadow-sm"
+					className="flex flex-col gap-3 lg:rounded-2xl lg:border lg:bg-card lg:p-5 lg:shadow-sm lg:col-start-1 lg:row-start-1"
 				>
 					<div className="flex items-center gap-2">
 						<Palette className="size-4 text-muted-foreground" />
@@ -196,7 +210,7 @@ function SettingsPage() {
 
 				<section
 					id="recordatorios"
-					className="flex flex-col gap-3 lg:rounded-2xl lg:border lg:bg-card lg:p-5 lg:shadow-sm"
+					className="flex flex-col gap-3 lg:rounded-2xl lg:border lg:bg-card lg:p-5 lg:shadow-sm lg:col-start-1 lg:row-start-3"
 				>
 					<div className="flex items-center gap-2">
 						<Bell className="size-4 text-muted-foreground" />
@@ -292,7 +306,7 @@ function SettingsPage() {
 
 				<section
 					id="fotos"
-					className="flex flex-col gap-3 lg:rounded-2xl lg:border lg:bg-card lg:p-5 lg:shadow-sm"
+					className="flex flex-col gap-3 lg:rounded-2xl lg:border lg:bg-card lg:p-5 lg:shadow-sm lg:col-start-1 lg:row-start-2"
 				>
 					<div>
 						<h2 className="font-medium">Fotos en el diario</h2>
@@ -318,7 +332,7 @@ function SettingsPage() {
 
 				<section
 					id="compartir"
-					className="flex flex-col gap-3 lg:rounded-2xl lg:border lg:bg-card lg:p-5 lg:shadow-sm"
+					className="flex flex-col gap-3 lg:rounded-2xl lg:border lg:bg-card lg:p-5 lg:shadow-sm lg:col-start-2 lg:row-span-3 lg:row-start-1"
 				>
 					<div>
 						<h2 className="font-medium">Compartir con tu nutricionista</h2>
@@ -486,17 +500,11 @@ function SettingsPage() {
 					</Button>
 				</section>
 
-				<section
-					id="cuenta"
-					className="mt-4 lg:col-span-2 lg:mt-0 lg:flex lg:justify-end"
-				>
+				<section id="cuenta" className="mt-4 lg:hidden">
 					<Button
 						variant="destructive"
-						className="w-full lg:w-auto"
-						onClick={() => {
-							logout();
-							navigate({ to: "/login" });
-						}}
+						className="w-full"
+						onClick={handleLogout}
 					>
 						<LogOut className="size-4" /> Cerrar sesión
 					</Button>

@@ -83,6 +83,7 @@ describe("preferencias de tema", () => {
 			version: 1,
 			appearance: { palette: "forest", mode: "system" },
 			diary: { showImages: true },
+			waterGoal: { enabled: false, ml: 2000 },
 			reminders: {
 				enabled: false,
 				timeZone: "Europe/Madrid",
@@ -109,5 +110,27 @@ describe("preferencias de tema", () => {
 			},
 			language: "ca",
 		});
+	});
+
+	it("limita el objetivo de agua a un rango razonable", () => {
+		expect(
+			normalizePreferences({ waterGoal: { enabled: true, ml: 99999 } })
+				.waterGoal,
+		).toEqual({ enabled: true, ml: 6000 });
+		expect(
+			normalizePreferences({ waterGoal: { enabled: true, ml: 10 } }).waterGoal,
+		).toEqual({ enabled: true, ml: 250 });
+		expect(
+			normalizePreferences({ waterGoal: { enabled: "yes", ml: "2l" } })
+				.waterGoal,
+		).toEqual({ enabled: false, ml: 2000 });
+	});
+
+	it("ignora recordatorios con formatos no válidos", () => {
+		const prefs = normalizePreferences({
+			reminders: { enabled: true, meals: { cena: { time: "tarde" } } },
+		});
+		expect(prefs.reminders.enabled).toBe(true);
+		expect(prefs.reminders.meals.cena.time).toBe("22:00");
 	});
 });

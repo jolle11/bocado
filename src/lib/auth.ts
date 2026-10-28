@@ -1,6 +1,7 @@
 import type { AuthRecord } from "pocketbase";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { pb } from "./pocketbase";
+import { disablePushNotifications } from "./push-notifications";
 
 // pb.authStore.record devuelve un objeto nuevo en cada lectura (parsea
 // localStorage), así que cacheamos el snapshot (keyed por token) para
@@ -50,6 +51,11 @@ export async function register(email: string, password: string, name: string) {
 	await login(email, password);
 }
 
-export function logout() {
+export async function logout() {
+	// Mientras aún hay sesión: quita la suscripción push de este dispositivo
+	// para que el siguiente usuario no reciba los avisos del anterior.
+	await disablePushNotifications().catch((error) => {
+		console.error("Could not remove push subscription on logout", error);
+	});
 	pb.authStore.clear();
 }

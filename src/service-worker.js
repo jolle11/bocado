@@ -41,7 +41,7 @@ self.addEventListener("fetch", (event) => {
 	}
 
 	if (request.mode === "navigate") {
-		event.respondWith(staleWhileRevalidateNavigation(event));
+		event.respondWith(networkFirstNavigation(request));
 	}
 });
 
@@ -72,8 +72,11 @@ self.addEventListener("notificationclick", (event) => {
 					client.url.startsWith(self.location.origin),
 				);
 				if (existing) {
-					existing.navigate(target);
-					return existing.focus();
+					// navigate() falla si la pestaña no está controlada por este SW.
+					return existing
+						.navigate(target)
+						.then((client) => (client ?? existing).focus())
+						.catch(() => self.clients.openWindow(target));
 				}
 				return self.clients.openWindow(target);
 			}),
@@ -92,20 +95,21 @@ async function cacheFirst(request) {
 	return response;
 }
 
-async function staleWhileRevalidateNavigation(event) {
+// Red primero: tras un deploy nunca servimos HTML viejo que apunte a assets
+// que ya no existen. Sin conexión usamos la copia de esa ruta o, en su defecto,
+// la de la app.
+async function networkFirstNavigation(request) {
 	const cache = await caches.open(CACHE_NAME);
-	const cached = (await cache.match(event.request)) ?? (await cache.match("/"));
-	const network = fetch(event.request).then(async (response) => {
-		if (response.ok) {
-			await cache.put(event.request, response.clone());
-		}
+	try {
+		const response = await fetch(request);
+		if (response.ok) await cache.put(request, response.clone());
 		return response;
-	});
-
-	if (cached) {
-		event.waitUntil(network.catch(() => undefined));
-		return cached;
+	} catch (error) {
+		const cached =
+			(await cache.match(request)) ??
+			(await cache.match("/app")) ??
+			(await cache.match("/"));
+		if (cached) return cached;
+		throw error;
 	}
-
-	return network;
 }

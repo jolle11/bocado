@@ -10,9 +10,10 @@ RUN apk add --no-cache ca-certificates unzip wget \
 
 # El contexto de build es la raíz del repo (RAILWAY_DOCKERFILE_PATH=pb/Dockerfile)
 COPY pb/pb_migrations /pb/pb_migrations
+COPY pb/pb_hooks /pb/pb_hooks
 
 EXPOSE 8080
 
 # Si PB_SUPERUSER_EMAIL/PASSWORD están definidos, crea o actualiza el
 # superusuario antes de arrancar (idempotente).
-CMD ["sh", "-c", "if [ -n \"$PB_SUPERUSER_EMAIL\" ]; then /pb/pocketbase superuser upsert \"$PB_SUPERUSER_EMAIL\" \"$PB_SUPERUSER_PASSWORD\" --dir /pb_data --migrationsDir /pb/pb_migrations; fi; exec /pb/pocketbase serve --http=0.0.0.0:8080 --dir /pb_data --migrationsDir /pb/pb_migrations"]
+CMD ["sh", "-c", "if [ -n \"$PB_SUPERUSER_EMAIL\" ]; then /pb/pocketbase superuser upsert \"$PB_SUPERUSER_EMAIL\" \"$PB_SUPERUSER_PASSWORD\" --dir /pb_data --migrationsDir /pb/pb_migrations; fi; exec /pb/pocketbase serve --http=0.0.0.0:8080 --dir /pb_data --migrationsDir /pb/pb_migrations --hooksDir /pb/pb_hooks"]

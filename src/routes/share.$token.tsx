@@ -48,11 +48,15 @@ function SharePage() {
 					<DisplayControls />
 				</div>
 				<div className="flex flex-1 flex-col items-center justify-center gap-2 px-2 text-center">
-					<h1 className="font-semibold text-2xl">Enlace no válido</h1>
+					<h1 className="font-semibold text-2xl">
+						{"rateLimited" in data ? "Demasiadas visitas" : "Enlace no válido"}
+					</h1>
 					<p className="text-muted-foreground">
-						{"expired" in data && data.expired
-							? "Este enlace ha caducado."
-							: "Este enlace no existe o ha sido revocado."}
+						{"rateLimited" in data
+							? "Espera un minuto y vuelve a intentarlo."
+							: "expired" in data && data.expired
+								? "Este enlace ha caducado."
+								: "Este enlace no existe o ha sido revocado."}
 					</p>
 				</div>
 			</main>

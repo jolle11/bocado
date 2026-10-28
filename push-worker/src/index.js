@@ -1,6 +1,9 @@
 import PocketBase from "pocketbase";
+import { UTApi } from "uploadthing/server";
 import webpush from "web-push";
+import { cleanOrphanPhotos } from "./orphan-photos.js";
 import {
+	isDuplicateDeliveryError,
 	isReminderDue,
 	localDateTime,
 	mealWasRegistered,
@@ -47,18 +50,31 @@ async function claimDelivery(user, mealType, localDay) {
 			local_day: localDay,
 		});
 	} catch (error) {
-		if (error?.status === 400) return null;
+		if (isDuplicateDeliveryError(error)) return null;
 		throw error;
 	}
 }
 
-async function mealsForUser(user, now) {
-	const from = new Date(now.getTime() - 36 * 60 * 60 * 1000).toISOString();
-	return pb.collection("meals").getFullList({
-		filter: pb.filter("user = {:user} && eaten_at >= {:from}", { user, from }),
-		fields: "entry_type,meal_type,eaten_at",
+// Una sola consulta para todos los usuarios con recordatorios pendientes.
+async function recentMealsByUser(users, now) {
+	if (users.length === 0) return new Map();
+	const from = new Date(now.getTime() - 36 * 60 * 60 * 1000)
+		.toISOString()
+		.replace("T", " ");
+	const params = Object.fromEntries(users.map((user, i) => [`u${i}`, user]));
+	const userFilter = users.map((_, i) => `user = {:u${i}}`).join(" || ");
+	const meals = await pb.collection("meals").getFullList({
+		filter: pb.filter(`eaten_at >= {:from} && (${userFilter})`, {
+			...params,
+			from,
+		}),
+		fields: "user,entry_type,meal_type,eaten_at",
+		batch: 1000,
 	});
+	return Map.groupBy(meals, (meal) => meal.user);
 }
+
+const USERS_PER_MEAL_QUERY = 50;
 
 async function sendToSubscriptions(subscriptions, payload) {
 	let delivered = false;
@@ -97,6 +113,7 @@ async function tick(now = new Date()) {
 		(subscription) => subscription.user,
 	);
 
+	const pending = [];
 	for (const record of preferenceRecords) {
 		const reminders = record.preferences?.reminders;
 		const userSubscriptions = subscriptionsByUser.get(record.user) ?? [];
@@ -117,23 +134,44 @@ async function tick(now = new Date()) {
 		const dueTypes = REMINDER_TYPES.filter((mealType) =>
 			isReminderDue(reminders.meals?.[mealType], local.time),
 		);
-		if (dueTypes.length === 0) continue;
+		if (dueTypes.length > 0)
+			pending.push({ record, reminders, userSubscriptions, local, dueTypes });
+	}
 
-		const meals = await mealsForUser(record.user, now);
-		for (const mealType of dueTypes) {
-			if (mealWasRegistered(meals, mealType, local.day, reminders.timeZone))
-				continue;
-			const delivery = await claimDelivery(record.user, mealType, local.day);
-			if (!delivery) continue;
-			const delivered = await sendToSubscriptions(
-				userSubscriptions,
-				notificationFor(mealType, local.day),
-			);
-			if (!delivered) {
-				await pb.collection("reminder_deliveries").delete(delivery.id);
-			} else {
-				console.info(`Sent ${mealType} reminder to user ${record.user}`);
+	for (let i = 0; i < pending.length; i += USERS_PER_MEAL_QUERY) {
+		const chunk = pending.slice(i, i + USERS_PER_MEAL_QUERY);
+		const mealsByUser = await recentMealsByUser(
+			chunk.map((item) => item.record.user),
+			now,
+		);
+		for (const item of chunk) {
+			try {
+				await remindUser(item, mealsByUser.get(item.record.user) ?? []);
+			} catch (error) {
+				// Un usuario con datos raros no debe bloquear al resto.
+				console.error(`Reminder failed for user ${item.record.user}`, error);
 			}
+		}
+	}
+}
+
+async function remindUser(
+	{ record, reminders, userSubscriptions, local, dueTypes },
+	meals,
+) {
+	for (const mealType of dueTypes) {
+		if (mealWasRegistered(meals, mealType, local.day, reminders.timeZone))
+			continue;
+		const delivery = await claimDelivery(record.user, mealType, local.day);
+		if (!delivery) continue;
+		const delivered = await sendToSubscriptions(
+			userSubscriptions,
+			notificationFor(mealType, local.day),
+		);
+		if (!delivered) {
+			await pb.collection("reminder_deliveries").delete(delivery.id);
+		} else {
+			console.info(`Sent ${mealType} reminder to user ${record.user}`);
 		}
 	}
 }
@@ -152,8 +190,29 @@ async function run() {
 	}
 }
 
+// Limpieza diaria de fotos huérfanas (opcional: requiere UPLOADTHING_TOKEN).
+const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000;
+const utapi = process.env.UPLOADTHING_TOKEN ? new UTApi() : null;
+let lastCleanup = 0;
+
+async function maybeCleanOrphanPhotos() {
+	if (!utapi || Date.now() - lastCleanup < CLEANUP_INTERVAL_MS) return;
+	lastCleanup = Date.now();
+	try {
+		await authenticate();
+		const deleted = await cleanOrphanPhotos({ pb, utapi });
+		if (deleted > 0) console.info(`Deleted ${deleted} orphan photos`);
+	} catch (error) {
+		console.error("Orphan photo cleanup failed", error);
+	}
+}
+
 await run();
-const timer = setInterval(run, intervalMs);
+await maybeCleanOrphanPhotos();
+const timer = setInterval(async () => {
+	await run();
+	await maybeCleanOrphanPhotos();
+}, intervalMs);
 for (const signal of ["SIGTERM", "SIGINT"]) {
 	process.on(signal, () => {
 		clearInterval(timer);

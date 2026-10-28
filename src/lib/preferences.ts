@@ -36,10 +36,20 @@ export interface UserPreferences {
 	diary: {
 		showImages: boolean;
 	};
+	waterGoal: WaterGoalPreference;
 	reminders: ReminderPreferences;
 	/** Prepared for the upcoming internationalisation work. */
 	language: string;
 }
+
+export interface WaterGoalPreference {
+	enabled: boolean;
+	/** Objetivo diario en mililitros. */
+	ml: number;
+}
+
+export const WATER_GOAL_MIN_ML = 250;
+export const WATER_GOAL_MAX_ML = 6000;
 
 interface PreferenceRecord {
 	id: string;
@@ -56,6 +66,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
 	version: 1,
 	appearance: { palette: "default", mode: "system" },
 	diary: { showImages: true },
+	waterGoal: { enabled: false, ml: 2000 },
 	reminders: {
 		enabled: false,
 		timeZone: "Europe/Madrid",
@@ -110,44 +121,53 @@ function isMode(value: unknown): value is ThemeMode {
 }
 
 /** Normalises partial/old server documents and supplies defaults for new fields. */
+type UnknownRecord = Record<string, unknown>;
+
+function asRecord(value: unknown): UnknownRecord {
+	return value && typeof value === "object" && !Array.isArray(value)
+		? (value as UnknownRecord)
+		: {};
+}
+
+const TIME_PATTERN = /^\d{2}:\d{2}$/;
+
+function timeOr(value: unknown, fallback: string) {
+	return typeof value === "string" && TIME_PATTERN.test(value)
+		? value
+		: fallback;
+}
+
+function boolOr(value: unknown, fallback: boolean) {
+	return typeof value === "boolean" ? value : fallback;
+}
+
+/** Normalises partial/old server documents and supplies defaults for new fields. */
 export function normalizePreferences(value: unknown): UserPreferences {
-	const candidate =
-		value && typeof value === "object"
-			? (value as Partial<UserPreferences>)
-			: {};
-	const appearance =
-		candidate.appearance && typeof candidate.appearance === "object"
-			? candidate.appearance
-			: {};
-	const diary =
-		candidate.diary && typeof candidate.diary === "object"
-			? candidate.diary
-			: {};
-	const reminders =
-		candidate.reminders && typeof candidate.reminders === "object"
-			? candidate.reminders
-			: {};
-	const reminderMeals =
-		reminders.meals && typeof reminders.meals === "object"
-			? reminders.meals
-			: {};
+	const candidate = asRecord(value);
+	const appearance = asRecord(candidate.appearance);
+	const diary = asRecord(candidate.diary);
+	const waterGoal = asRecord(candidate.waterGoal);
+	const reminders = asRecord(candidate.reminders);
+	const reminderMeals = asRecord(reminders.meals);
 	const normalizeReminder = (meal: ReminderMealType) => {
-		const value = reminderMeals[meal];
+		const value = asRecord(reminderMeals[meal]);
 		const fallback = DEFAULT_PREFERENCES.reminders.meals[meal];
 		return {
-			enabled:
-				typeof value?.enabled === "boolean" ? value.enabled : fallback.enabled,
-			time: /^\d{2}:\d{2}$/.test(value?.time ?? "")
-				? value.time
-				: fallback.time,
-			windowStart: /^\d{2}:\d{2}$/.test(value?.windowStart ?? "")
-				? value.windowStart
-				: fallback.windowStart,
-			windowEnd: /^\d{2}:\d{2}$/.test(value?.windowEnd ?? "")
-				? value.windowEnd
-				: fallback.windowEnd,
+			enabled: boolOr(value.enabled, fallback.enabled),
+			time: timeOr(value.time, fallback.time),
+			windowStart: timeOr(value.windowStart, fallback.windowStart),
+			windowEnd: timeOr(value.windowEnd, fallback.windowEnd),
 		};
 	};
+	const waterMl =
+		typeof waterGoal.ml === "number" && Number.isFinite(waterGoal.ml)
+			? Math.round(
+					Math.min(
+						WATER_GOAL_MAX_ML,
+						Math.max(WATER_GOAL_MIN_ML, waterGoal.ml),
+					),
+				)
+			: DEFAULT_PREFERENCES.waterGoal.ml;
 
 	return {
 		version: 1,
@@ -160,14 +180,17 @@ export function normalizePreferences(value: unknown): UserPreferences {
 				: DEFAULT_PREFERENCES.appearance.mode,
 		},
 		diary: {
-			showImages:
-				typeof diary.showImages === "boolean"
-					? diary.showImages
-					: DEFAULT_PREFERENCES.diary.showImages,
+			showImages: boolOr(
+				diary.showImages,
+				DEFAULT_PREFERENCES.diary.showImages,
+			),
+		},
+		waterGoal: {
+			enabled: boolOr(waterGoal.enabled, DEFAULT_PREFERENCES.waterGoal.enabled),
+			ml: waterMl,
 		},
 		reminders: {
-			enabled:
-				typeof reminders.enabled === "boolean" ? reminders.enabled : false,
+			enabled: boolOr(reminders.enabled, false),
 			timeZone:
 				typeof reminders.timeZone === "string" && reminders.timeZone
 					? reminders.timeZone
@@ -397,6 +420,25 @@ export function useImagePreference() {
 	}
 
 	return { showImages, setShowImages };
+}
+
+export function useWaterGoalPreference() {
+	const [waterGoal, setWaterGoalState] = useState<WaterGoalPreference>(
+		DEFAULT_PREFERENCES.waterGoal,
+	);
+
+	useEffect(() => {
+		const sync = () => setWaterGoalState(readPreferences().waterGoal);
+		sync();
+		window.addEventListener(PREFERENCE_EVENT, sync);
+		return () => window.removeEventListener(PREFERENCE_EVENT, sync);
+	}, []);
+
+	function setWaterGoal(next: WaterGoalPreference) {
+		updatePreferences((current) => ({ ...current, waterGoal: next }));
+	}
+
+	return { waterGoal, setWaterGoal };
 }
 
 export function useReminderPreferences() {

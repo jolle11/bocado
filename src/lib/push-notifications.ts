@@ -27,13 +27,26 @@ export async function enablePushNotifications() {
 		throw new Error("No se ha concedido permiso para notificaciones");
 
 	const registration = await navigator.serviceWorker.ready;
-	const existing = await registration.pushManager.getSubscription();
-	const subscription =
-		existing ??
-		(await registration.pushManager.subscribe({
+	const subscribe = () =>
+		registration.pushManager.subscribe({
 			userVisibleOnly: true,
 			applicationServerKey: urlBase64ToUint8Array(publicKey),
-		}));
+		});
+	const existing = await registration.pushManager.getSubscription();
+	const subscription = existing ?? (await subscribe());
+
+	try {
+		await saveSubscription(subscription);
+	} catch (error) {
+		if (!existing) throw error;
+		// El endpoint puede pertenecer a otra cuenta que usó este navegador (no lo
+		// vemos por las reglas de acceso): pedimos un endpoint nuevo.
+		await existing.unsubscribe();
+		await saveSubscription(await subscribe());
+	}
+}
+
+async function saveSubscription(subscription: PushSubscription) {
 	const json = subscription.toJSON();
 	if (!json.endpoint || !json.keys?.p256dh || !json.keys.auth) {
 		throw new Error("La suscripción push está incompleta");
@@ -55,7 +68,8 @@ export async function enablePushNotifications() {
 
 export async function disablePushNotifications() {
 	if (!supportsPushNotifications()) return;
-	const registration = await navigator.serviceWorker.ready;
+	const registration = await navigator.serviceWorker.getRegistration();
+	if (!registration) return;
 	const subscription = await registration.pushManager.getSubscription();
 	if (!subscription) return;
 	const records = await pb.collection("push_subscriptions").getFullList({

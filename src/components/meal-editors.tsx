@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { MealForm } from "#/components/meal-form";
+import { MealForm } from "#/components/meal-form/meal-form";
 import { useCreateMeal, useMeal, useUpdateMeal } from "#/lib/queries";
 import { type MealType, normalizeEntryType } from "#/lib/types";
 
@@ -47,6 +47,7 @@ export function NewMealEditor({
 				photos: [],
 			}}
 			submitLabel="Guardar comida"
+			showTemplates
 			onSubmit={async (values) => {
 				await createMeal.mutateAsync(values);
 				onDone();

@@ -6,7 +6,13 @@ import {
 } from "@tanstack/react-query";
 import { endOfDay, startOfDay } from "date-fns";
 import { pb } from "./pocketbase";
-import type { Meal, MealForm, ShareLink } from "./types";
+import type {
+	Meal,
+	MealForm,
+	MealTemplate,
+	MealTemplateInput,
+	ShareLink,
+} from "./types";
 import { deleteUploadthingFiles } from "./uploadthing-files";
 
 function pbDate(d: Date) {
@@ -156,5 +162,39 @@ export function useDeleteShareLink() {
 		mutationFn: (id: string) => pb.collection("share_links").delete(id),
 		onSuccess: () =>
 			queryClient.invalidateQueries({ queryKey: ["share_links"] }),
+	});
+}
+
+export function useMealTemplates() {
+	return useQuery({
+		queryKey: ["meal_templates"],
+		queryFn: () =>
+			pb
+				.collection("meal_templates")
+				.getFullList<MealTemplate>({ sort: "name" }),
+	});
+}
+
+export function useCreateMealTemplate() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (data: MealTemplateInput) =>
+			pb.collection("meal_templates").create<MealTemplate>({
+				...data,
+				name: data.name.trim(),
+				description: data.description.trim(),
+				user: pb.authStore.record?.id,
+			}),
+		onSuccess: () =>
+			queryClient.invalidateQueries({ queryKey: ["meal_templates"] }),
+	});
+}
+
+export function useDeleteMealTemplate() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (id: string) => pb.collection("meal_templates").delete(id),
+		onSuccess: () =>
+			queryClient.invalidateQueries({ queryKey: ["meal_templates"] }),
 	});
 }

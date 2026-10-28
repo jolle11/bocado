@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mealFormSchema } from "./types";
+import { mealFormSchema, templateNameFrom } from "./types";
 
 const baseEntry = {
 	entry_type: "meal" as const,
@@ -45,5 +45,15 @@ describe("mealFormSchema", () => {
 		});
 
 		expect(result.success).toBe(false);
+	});
+});
+
+describe("templateNameFrom", () => {
+	it("usa la primera línea y la recorta", () => {
+		expect(templateNameFrom("Tostada con tomate\ny café", "x")).toBe(
+			"Tostada con tomate",
+		);
+		expect(templateNameFrom("a".repeat(60), "x")).toHaveLength(40);
+		expect(templateNameFrom("   ", "Favorito")).toBe("Favorito");
 	});
 });

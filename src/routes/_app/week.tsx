@@ -15,16 +15,23 @@ import { ExtraSummary } from "#/components/extra-summary";
 import { MealCard } from "#/components/meal-card";
 import { Kbd } from "#/components/shortcuts-dialog";
 import { Button } from "#/components/ui/button";
+import { WeeklyStatsCard } from "#/components/weekly-stats-card";
 import { useHotkey } from "#/lib/composer";
 import { getExtraStats } from "#/lib/extra-stats";
+import { useWaterGoalPreference } from "#/lib/preferences";
 import { useDeleteMeal, useMealsInRange } from "#/lib/queries";
+import { useToday } from "#/lib/use-today";
+import { getWeeklyStats } from "#/lib/weekly-stats";
 
 export const Route = createFileRoute("/_app/week")({
 	component: WeekPage,
 });
 
 function WeekPage() {
-	const [anchor, setAnchor] = useState(new Date());
+	const today = useToday();
+	const [anchor, setAnchor] = useState(today);
+	const { waterGoal } = useWaterGoalPreference();
+	const waterGoalMl = waterGoal.enabled ? waterGoal.ml : null;
 	const weekStart = startOfWeek(anchor, { weekStartsOn: 1 });
 	const weekEnd = endOfWeek(anchor, { weekStartsOn: 1 });
 	const { data: meals, isLoading } = useMealsInRange(weekStart, weekEnd);
@@ -45,11 +52,13 @@ function WeekPage() {
 		previousStart: previousWeekStart,
 		previousEnd: previousWeekEnd,
 	});
-	const days = Array.from({ length: 7 }, (_, index) => {
-		const date = new Date(weekStart);
-		date.setDate(weekStart.getDate() + index);
-		return date;
+	const weeklyStats = getWeeklyStats({
+		meals: meals ?? [],
+		weekStart,
+		today,
+		waterGoalMl,
 	});
+	const days = weeklyStats.days.map((day) => day.date);
 
 	return (
 		<div className="flex flex-col gap-5 lg:mx-auto lg:w-full lg:max-w-5xl lg:gap-6">
@@ -72,7 +81,7 @@ function WeekPage() {
 						</p>
 						<button
 							type="button"
-							onClick={() => setAnchor(new Date())}
+							onClick={() => setAnchor(today)}
 							className="text-primary text-xs"
 						>
 							Volver a esta semana
@@ -100,6 +109,12 @@ function WeekPage() {
 				/>
 			</div>
 
+			<WeeklyStatsCard
+				stats={weeklyStats}
+				waterGoalMl={waterGoalMl}
+				isLoading={isLoading}
+			/>
+
 			{isLoading && <p className="text-muted-foreground text-sm">Cargando…</p>}
 			<div className="flex flex-col gap-5 lg:grid lg:grid-cols-2 lg:gap-6">
 				{days.map((day) => {
@@ -114,7 +129,7 @@ function WeekPage() {
 							<div className="flex items-center justify-between border-border border-b pb-2">
 								<h2
 									className={`font-medium text-sm capitalize ${
-										isSameDay(day, new Date()) ? "text-primary" : ""
+										isSameDay(day, today) ? "text-primary" : ""
 									}`}
 								>
 									{format(day, "EEEE d", { locale: es })}

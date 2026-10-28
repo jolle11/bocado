@@ -57,3 +57,12 @@ export function notificationFor(mealType, localDay) {
 		tag: `meal-reminder-${mealType}-${localDay}`,
 	};
 }
+
+/** PocketBase responde 400 con `validation_not_unique` si ya se envió hoy. */
+export function isDuplicateDeliveryError(error) {
+	if (error?.status !== 400) return false;
+	const fields = error?.response?.data ?? error?.data?.data ?? {};
+	return Object.values(fields).some(
+		(field) => field?.code === "validation_not_unique",
+	);
+}

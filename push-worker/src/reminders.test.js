@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+	isDuplicateDeliveryError,
 	isReminderDue,
 	localDateTime,
 	mealWasRegistered,
@@ -44,4 +45,22 @@ test("only a meal of the matching type suppresses the reminder", () => {
 		mealWasRegistered(meals, "comida", "2026-08-15", "Europe/Madrid"),
 		true,
 	);
+});
+
+test("only treats unique-index violations as duplicate deliveries", () => {
+	assert.equal(
+		isDuplicateDeliveryError({
+			status: 400,
+			response: { data: { user: { code: "validation_not_unique" } } },
+		}),
+		true,
+	);
+	assert.equal(
+		isDuplicateDeliveryError({
+			status: 400,
+			response: { data: { user: { code: "validation_required" } } },
+		}),
+		false,
+	);
+	assert.equal(isDuplicateDeliveryError({ status: 500 }), false);
 });

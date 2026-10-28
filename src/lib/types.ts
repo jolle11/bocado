@@ -102,3 +102,27 @@ export interface ShareLink {
 	visible_until?: string;
 	created: string;
 }
+
+export interface MealTemplate {
+	id: string;
+	user: string;
+	name: string;
+	entry_type: EntryType | "";
+	meal_type: MealType | "";
+	description: string;
+	water_ml: number;
+	created: string;
+	updated: string;
+}
+
+export type MealTemplateInput = Pick<
+	MealTemplate,
+	"name" | "entry_type" | "meal_type" | "description" | "water_ml"
+>;
+
+/** Nombre corto por defecto para un favorito a partir de su descripción. */
+export function templateNameFrom(description: string, fallback: string) {
+	const firstLine = description.trim().split("\n")[0] ?? "";
+	const name = firstLine.length > 40 ? `${firstLine.slice(0, 39)}…` : firstLine;
+	return name || fallback;
+}

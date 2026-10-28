@@ -1,64 +1,57 @@
 import { useForm } from "@tanstack/react-form";
-import {
-	Camera,
-	Droplets,
-	ImagePlus,
-	Minus,
-	Plus,
-	Sparkles,
-	UtensilsCrossed,
-	X,
-} from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Button } from "#/components/ui/button";
+import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Textarea } from "#/components/ui/textarea";
-import { optimizeImage } from "#/lib/optimize-image";
 import { pb } from "#/lib/pocketbase";
+import { useCreateMealTemplate } from "#/lib/queries";
 import {
 	ENTRY_TYPE_LABELS,
-	ENTRY_TYPES,
-	MEAL_TYPE_LABELS,
-	MEAL_TYPES,
 	type MealForm as MealFormValues,
 	type MealPhoto,
+	type MealTemplate,
 	mealFormSchema,
+	normalizeEntryType,
+	templateNameFrom,
 } from "#/lib/types";
 import { useUploadThing } from "#/lib/uploadthing";
 import { deleteUploadthingFiles } from "#/lib/uploadthing-files";
+import {
+	EntryTypePicker,
+	FieldError,
+	MealTypePicker,
+	Switch,
+	WaterAmountField,
+} from "./fields";
+import { PhotoPicker, usePhotoDrafts } from "./photo-picker";
+import { TemplatePicker } from "./template-picker";
 
 export function MealForm({
 	initialValues,
 	submitLabel,
 	onSubmit,
+	showTemplates = false,
 }: {
 	initialValues: MealFormValues;
 	submitLabel: string;
 	onSubmit: (values: MealFormValues) => Promise<void>;
+	/** Muestra los favoritos para rellenar el formulario (solo al crear). */
+	showTemplates?: boolean;
 }) {
 	const { startUpload, isUploading } = useUploadThing("mealImage", {
 		headers: () => ({
 			Authorization: `Bearer ${pb.authStore.token}`,
 		}),
 	});
-	const [existingPhotos, setExistingPhotos] = useState<MealPhoto[]>(
-		initialValues.photos,
-	);
-	const [files, setFiles] = useState<File[]>([]);
-	const [previews, setPreviews] = useState<string[]>([]);
+	const photos = usePhotoDrafts(initialValues.photos);
+	const createTemplate = useCreateMealTemplate();
 	const [error, setError] = useState<string | null>(null);
-	const [isOptimizing, setIsOptimizing] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const [entryType, setEntryType] = useState(initialValues.entry_type);
 	const [finished, setFinished] = useState(initialValues.finished);
-	const fileInput = useRef<HTMLInputElement>(null);
-
-	useEffect(
-		() => () => {
-			for (const preview of previews) URL.revokeObjectURL(preview);
-		},
-		[previews],
-	);
+	const [saveAsTemplate, setSaveAsTemplate] = useState(false);
+	const [templateName, setTemplateName] = useState("");
 
 	const form = useForm({
 		defaultValues: initialValues,
@@ -69,26 +62,46 @@ export function MealForm({
 			let uploadedKeys: string[] = [];
 			try {
 				let uploaded: MealPhoto[] = [];
-				if (value.entry_type === "meal" && files.length > 0) {
-					const result = await startUpload(files);
-					if (!result || result.length !== files.length) {
+				if (value.entry_type === "meal" && photos.files.length > 0) {
+					const result = await startUpload(photos.files);
+					if (!result || result.length !== photos.files.length) {
 						throw new Error("upload failed");
 					}
 					uploaded = result.map((file) => file.serverData);
 					uploadedKeys = uploaded.map((photo) => photo.key);
 				}
-				const photos =
-					value.entry_type === "meal" ? [...existingPhotos, ...uploaded] : [];
+				const savedPhotos =
+					value.entry_type === "meal"
+						? [...photos.existingPhotos, ...uploaded]
+						: [];
+				const description =
+					value.entry_type === "water" ? "Agua" : value.description.trim();
 				await onSubmit({
 					...value,
-					description:
-						value.entry_type === "water" ? "Agua" : value.description.trim(),
-					photos,
-					photo_url: photos[0]?.url ?? "",
-					photo_key: photos[0]?.key ?? "",
+					description,
+					photos: savedPhotos,
+					photo_url: savedPhotos[0]?.url ?? "",
+					photo_key: savedPhotos[0]?.key ?? "",
 				});
+				uploadedKeys = [];
 
-				const keptKeys = new Set(photos.map((photo) => photo.key));
+				if (saveAsTemplate) {
+					await createTemplate
+						.mutateAsync({
+							name:
+								templateName.trim() ||
+								templateNameFrom(description, "Favorito"),
+							entry_type: value.entry_type,
+							meal_type: value.entry_type === "meal" ? value.meal_type : "",
+							description: value.entry_type === "water" ? "" : description,
+							water_ml: value.entry_type === "water" ? value.water_ml : 0,
+						})
+						.catch((templateError) => {
+							console.error("Could not save template", templateError);
+						});
+				}
+
+				const keptKeys = new Set(savedPhotos.map((photo) => photo.key));
 				const removedKeys = initialValues.photos
 					.map((photo) => photo.key)
 					.filter((key) => key && !keptKeys.has(key));
@@ -108,36 +121,19 @@ export function MealForm({
 		},
 	});
 
-	const photoCount = existingPhotos.length + files.length;
-
-	async function addFiles(event: React.ChangeEvent<HTMLInputElement>) {
-		const picked = [...(event.target.files ?? [])].slice(0, 5 - photoCount);
-		event.target.value = "";
-		if (picked.length === 0) return;
-
-		setIsOptimizing(true);
-		setError(null);
-		try {
-			const optimized = await Promise.all(picked.map(optimizeImage));
-			setFiles((current) => [...current, ...optimized]);
-			setPreviews((current) => [
-				...current,
-				...optimized.map((file) => URL.createObjectURL(file)),
-			]);
-		} catch {
-			setError("No se pudieron preparar las fotos. Inténtalo de nuevo.");
-		} finally {
-			setIsOptimizing(false);
+	function applyTemplate(template: MealTemplate) {
+		const type = normalizeEntryType(template.entry_type);
+		form.setFieldValue("entry_type", type);
+		setEntryType(type);
+		if (template.meal_type) form.setFieldValue("meal_type", template.meal_type);
+		if (type === "water") {
+			form.setFieldValue("water_ml", template.water_ml || 250);
+		} else {
+			form.setFieldValue("description", template.description);
 		}
 	}
 
-	function removeNewPhoto(index: number) {
-		URL.revokeObjectURL(previews[index]);
-		setFiles((current) => current.filter((_, i) => i !== index));
-		setPreviews((current) => current.filter((_, i) => i !== index));
-	}
-
-	const busy = isOptimizing || isUploading || isSaving;
+	const busy = photos.isOptimizing || isUploading || isSaving;
 
 	return (
 		<form
@@ -147,129 +143,31 @@ export function MealForm({
 				form.handleSubmit();
 			}}
 		>
+			{showTemplates && <TemplatePicker onPick={applyTemplate} />}
+
 			<form.Field name="entry_type">
 				{(field) => (
-					<div className="grid gap-2">
-						<Label>¿Qué quieres añadir?</Label>
-						<div className="grid grid-cols-3 rounded-xl bg-muted p-1">
-							{ENTRY_TYPES.map((type) => {
-								const Icon =
-									type === "meal"
-										? UtensilsCrossed
-										: type === "water"
-											? Droplets
-											: Sparkles;
-								return (
-									<button
-										key={type}
-										type="button"
-										onClick={() => {
-											field.handleChange(type);
-											setEntryType(type);
-										}}
-										className={`flex items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-sm ${
-											field.state.value === type
-												? "bg-card font-medium shadow-sm"
-												: "text-muted-foreground"
-										}`}
-									>
-										<Icon className="size-4" />
-										{ENTRY_TYPE_LABELS[type]}
-									</button>
-								);
-							})}
-						</div>
-					</div>
+					<EntryTypePicker
+						value={field.state.value}
+						onChange={(type) => {
+							field.handleChange(type);
+							setEntryType(type);
+						}}
+					/>
 				)}
 			</form.Field>
 
 			{entryType === "meal" && (
-				<div className="grid gap-2">
-					<div className="flex items-center justify-between">
-						<Label>Fotos</Label>
-						<span className="text-muted-foreground text-xs">
-							{photoCount}/5
-						</span>
-					</div>
-					{photoCount > 0 && (
-						<div className="grid grid-cols-2 gap-2">
-							{existingPhotos.map((photo, index) => (
-								<PhotoPreview
-									key={photo.key || photo.url}
-									src={photo.url}
-									onRemove={() =>
-										setExistingPhotos((current) =>
-											current.filter((_, i) => i !== index),
-										)
-									}
-								/>
-							))}
-							{previews.map((preview, index) => (
-								<PhotoPreview
-									key={preview}
-									src={preview}
-									onRemove={() => removeNewPhoto(index)}
-								/>
-							))}
-						</div>
-					)}
-					{photoCount < 5 && (
-						<button
-							type="button"
-							disabled={busy}
-							onClick={() => fileInput.current?.click()}
-							className="flex min-h-28 w-full flex-col items-center justify-center gap-2 rounded-xl border border-border border-dashed text-muted-foreground hover:bg-accent/50 disabled:opacity-50"
-						>
-							{photoCount === 0 ? (
-								<Camera className="size-7" />
-							) : (
-								<ImagePlus className="size-7" />
-							)}
-							<span className="text-sm">
-								{isOptimizing
-									? "Optimizando fotos…"
-									: photoCount === 0
-										? "Hacer fotos o elegir de la galería"
-										: "Añadir más fotos"}
-							</span>
-						</button>
-					)}
-					<input
-						ref={fileInput}
-						type="file"
-						accept="image/*"
-						multiple
-						className="hidden"
-						onChange={addFiles}
-					/>
-					<p className="text-muted-foreground text-xs">
-						Puedes añadir hasta 5 fotos por comida.
-					</p>
-				</div>
+				<PhotoPicker drafts={photos} disabled={busy} onError={setError} />
 			)}
 
 			{entryType === "meal" && (
 				<form.Field name="meal_type">
 					{(field) => (
-						<div className="grid gap-2">
-							<Label>Tipo</Label>
-							<div className="flex flex-wrap gap-2">
-								{MEAL_TYPES.map((type) => (
-									<button
-										key={type}
-										type="button"
-										onClick={() => field.handleChange(type)}
-										className={`rounded-full border px-4 py-1.5 text-sm ${
-											field.state.value === type
-												? "border-primary bg-primary text-primary-foreground"
-												: "border-border text-muted-foreground"
-										}`}
-									>
-										{MEAL_TYPE_LABELS[type]}
-									</button>
-								))}
-							</div>
-						</div>
+						<MealTypePicker
+							value={field.state.value}
+							onChange={field.handleChange}
+						/>
 					)}
 				</form.Field>
 			)}
@@ -277,43 +175,11 @@ export function MealForm({
 			{entryType === "water" ? (
 				<form.Field name="water_ml">
 					{(field) => (
-						<div className="grid gap-2">
-							<Label>¿Cuánta agua?</Label>
-							<div className="rounded-2xl border bg-card p-5">
-								<div className="flex items-center justify-center gap-6">
-									<AmountButton
-										label="Restar 250 ml"
-										onClick={() =>
-											field.handleChange(Math.max(250, field.state.value - 250))
-										}
-									>
-										<Minus className="size-5" />
-									</AmountButton>
-									<div className="min-w-28 text-center">
-										<Droplets className="mx-auto size-9 text-sky-500" />
-										<p className="mt-1 font-semibold text-3xl">
-											{formatWater(field.state.value)}
-										</p>
-										<p className="text-muted-foreground text-sm">de agua</p>
-									</div>
-									<AmountButton
-										label="Sumar 250 ml"
-										onClick={() =>
-											field.handleChange(
-												Math.min(10000, field.state.value + 250),
-											)
-										}
-									>
-										<Plus className="size-5" />
-									</AmountButton>
-								</div>
-							</div>
-							{field.state.meta.errors[0] && (
-								<p className="text-destructive text-sm">
-									{field.state.meta.errors[0]?.message}
-								</p>
-							)}
-						</div>
+						<WaterAmountField
+							value={field.state.value}
+							onChange={field.handleChange}
+							error={field.state.meta.errors[0]?.message}
+						/>
 					)}
 				</form.Field>
 			) : (
@@ -336,11 +202,7 @@ export function MealForm({
 										: "Un café, medicación, suplementos…"
 								}
 							/>
-							{field.state.meta.errors[0] && (
-								<p className="text-destructive text-sm">
-									{field.state.meta.errors[0]?.message}
-								</p>
-							)}
+							<FieldError message={field.state.meta.errors[0]?.message} />
 						</div>
 					)}
 				</form.Field>
@@ -357,30 +219,16 @@ export function MealForm({
 										Desactívalo si no te la has terminado.
 									</p>
 								</div>
-								<button
+								<Switch
 									id="finished"
-									type="button"
-									role="switch"
-									aria-checked={field.state.value}
-									onClick={() => {
-										const next = !field.state.value;
+									checked={field.state.value}
+									onLabel="Terminada"
+									offLabel="No terminada"
+									onChange={(next) => {
 										field.handleChange(next);
 										setFinished(next);
 									}}
-									className={`relative h-7 w-12 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-										field.state.value ? "bg-primary" : "bg-muted-foreground/35"
-									}`}
-								>
-									<span
-										aria-hidden="true"
-										className={`absolute top-1 left-1 size-5 rounded-full bg-white shadow-sm transition-transform ${
-											field.state.value ? "translate-x-5" : "translate-x-0"
-										}`}
-									/>
-									<span className="sr-only">
-										{field.state.value ? "Terminada" : "No terminada"}
-									</span>
-								</button>
+								/>
 							</div>
 						)}
 					</form.Field>
@@ -402,11 +250,7 @@ export function MealForm({
 										onChange={(event) => field.handleChange(event.target.value)}
 										placeholder="Demasiada cantidad, no tenía hambre…"
 									/>
-									{field.state.meta.errors[0] && (
-										<p className="text-destructive text-sm">
-											{field.state.meta.errors[0]?.message}
-										</p>
-									)}
+									<FieldError message={field.state.meta.errors[0]?.message} />
 								</div>
 							)}
 						</form.Field>
@@ -429,6 +273,41 @@ export function MealForm({
 				)}
 			</form.Field>
 
+			<div className="grid gap-3 rounded-xl border bg-card p-4">
+				<div className="flex items-center justify-between gap-4">
+					<div>
+						<Label htmlFor="save-template">Guardar como favorito</Label>
+						<p className="mt-0.5 text-muted-foreground text-xs">
+							Para repetirla con un toque la próxima vez.
+						</p>
+					</div>
+					<Switch
+						id="save-template"
+						checked={saveAsTemplate}
+						onLabel="Se guardará como favorito"
+						offLabel="No se guardará como favorito"
+						onChange={setSaveAsTemplate}
+					/>
+				</div>
+				{saveAsTemplate && (
+					<div className="grid gap-2 border-border border-t pt-3">
+						<Label htmlFor="template-name">
+							Nombre{" "}
+							<span className="font-normal text-muted-foreground">
+								(opcional)
+							</span>
+						</Label>
+						<Input
+							id="template-name"
+							maxLength={80}
+							value={templateName}
+							onChange={(event) => setTemplateName(event.target.value)}
+							placeholder="Desayuno de diario"
+						/>
+					</div>
+				)}
+			</div>
+
 			{error && <p className="text-destructive text-sm">{error}</p>}
 
 			<Button type="submit" size="lg" disabled={busy}>
@@ -439,63 +318,5 @@ export function MealForm({
 						: `Guardar ${ENTRY_TYPE_LABELS[entryType].toLowerCase()}`}
 			</Button>
 		</form>
-	);
-}
-
-function formatWater(ml: number) {
-	if (ml >= 1000) {
-		const liters = ml / 1000;
-		return `${Number.isInteger(liters) ? liters : liters.toFixed(2)} l`;
-	}
-	return `${ml} ml`;
-}
-
-function AmountButton({
-	label,
-	children,
-	onClick,
-}: {
-	label: string;
-	children: React.ReactNode;
-	onClick: () => void;
-}) {
-	return (
-		<button
-			type="button"
-			aria-label={label}
-			onClick={onClick}
-			className="flex size-11 items-center justify-center rounded-full border bg-card hover:bg-accent"
-		>
-			{children}
-		</button>
-	);
-}
-
-function PhotoPreview({
-	src,
-	onRemove,
-}: {
-	src: string;
-	onRemove: () => void;
-}) {
-	return (
-		<div className="relative overflow-hidden rounded-xl">
-			<img
-				src={src}
-				alt="Vista previa"
-				className="aspect-video w-full object-cover"
-				width={640}
-				height={360}
-				decoding="async"
-			/>
-			<button
-				type="button"
-				className="absolute top-2 right-2 rounded-full bg-black/65 p-1.5 text-white"
-				onClick={onRemove}
-				aria-label="Quitar foto"
-			>
-				<X className="size-4" />
-			</button>
-		</div>
 	);
 }

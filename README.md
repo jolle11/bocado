@@ -17,7 +17,7 @@ pnpm install
 cp .env.example .env   # y rellena UPLOADTHING_TOKEN
 
 # Terminal 1: PocketBase (aplica migraciones de pb/pb_migrations al arrancar)
-cd pb && ./pocketbase serve
+cd pb && ./pocketbase serve --hooksDir pb_hooks
 
 # Terminal 2: la app
 pnpm dev               # http://localhost:3000
@@ -49,9 +49,18 @@ pnpm check       # Biome
   (desayuno/almuerzo/comida/merienda/cena/snack), `eaten_at`. Reglas: cada
   usuario solo ve/edita lo suyo.
 - `share_links` — `user`, `token` (único), `active`. La ruta pública
-  `/share/:token` lee las comidas vía server function con superusuario.
+  `/share/:token` lee las comidas vía server function con superusuario y solo
+  devuelve los campos públicos (sin ids de usuario ni keys de fotos).
+- `meal_templates` — favoritos: `user`, `name`, `entry_type`, `meal_type`,
+  `description`, `water_ml`.
+- `user_preferences` — documento JSON con tema, fotos, objetivo de agua y
+  recordatorios.
+
+Ninguna regla de update permite cambiar el `user` de un registro.
 
 Las migraciones viven en `pb/pb_migrations/` y se aplican solas al arrancar.
+Los hooks de `pb/pb_hooks/` validan que las fotos de `meals` estén alojadas en
+UploadThing.
 
 ## Despliegue en Railway
 
@@ -100,6 +109,8 @@ Configura estas variables:
 - `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`
 - `VAPID_SUBJECT` → por ejemplo `mailto:admin@tudominio.com`
 - `WORKER_INTERVAL_MS` → opcional; por defecto `300000` (5 minutos)
+- `UPLOADTHING_TOKEN` → opcional; activa la limpieza diaria de fotos huérfanas
+  (subidas de hace más de 24 h que no están en ninguna comida)
 
 Genera una única pareja VAPID y reutiliza su clave pública tanto en la app como
 en el worker:

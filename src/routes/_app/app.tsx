@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { endOfWeek, format, startOfWeek, subWeeks } from "date-fns";
 import { es } from "date-fns/locale";
-import { Check, Droplets, Plus } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { ExtraSummary } from "#/components/extra-summary";
 import { MealCard } from "#/components/meal-card";
 import { Button } from "#/components/ui/button";
+import { WaterGoalProgress } from "#/components/water-goal-progress";
 import { useAuth } from "#/lib/auth";
 import { useComposer } from "#/lib/composer";
 import { getExtraStats } from "#/lib/extra-stats";
+import { useWaterGoalPreference } from "#/lib/preferences";
 import { useDeleteMeal, useMealsInRange, useMealsOfDay } from "#/lib/queries";
 import {
 	MEAL_TYPE_LABELS,
@@ -15,15 +17,17 @@ import {
 	type Meal,
 	normalizeEntryType,
 } from "#/lib/types";
+import { useToday } from "#/lib/use-today";
 
 export const Route = createFileRoute("/_app/app")({ component: TodayPage });
 
 function TodayPage() {
 	const { user } = useAuth();
-	const today = new Date();
+	const today = useToday();
 	const { data: meals, isLoading } = useMealsOfDay(today);
 	const deleteMeal = useDeleteMeal();
 	const composer = useComposer();
+	const { waterGoal } = useWaterGoalPreference();
 
 	return (
 		<div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-x-10">
@@ -36,6 +40,15 @@ function TodayPage() {
 						Hola{user?.name ? `, ${user.name}` : ""} 👋
 					</h1>
 				</header>
+
+				{waterGoal.enabled && (
+					<div className="lg:hidden">
+						<WaterGoalProgress
+							waterMl={waterOf(meals ?? [])}
+							goalMl={waterGoal.ml}
+						/>
+					</div>
+				)}
 
 				{isLoading && (
 					<p className="text-muted-foreground text-sm">Cargando…</p>
@@ -62,14 +75,31 @@ function TodayPage() {
 					))}
 				</div>
 			</div>
-			<TodaySummary meals={meals ?? []} />
+			<TodaySummary
+				meals={meals ?? []}
+				today={today}
+				waterGoalMl={waterGoal.enabled ? waterGoal.ml : null}
+			/>
 		</div>
 	);
 }
 
-function TodaySummary({ meals }: { meals: Meal[] }) {
+function waterOf(meals: Meal[]) {
+	return meals
+		.filter((meal) => normalizeEntryType(meal.entry_type) === "water")
+		.reduce((total, meal) => total + (meal.water_ml ?? 0), 0);
+}
+
+function TodaySummary({
+	meals,
+	today,
+	waterGoalMl,
+}: {
+	meals: Meal[];
+	today: Date;
+	waterGoalMl: number | null;
+}) {
 	const composer = useComposer();
-	const today = new Date();
 	const weekStart = startOfWeek(today, { weekStartsOn: 1 });
 	const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
 	const previousStart = subWeeks(weekStart, 1);
@@ -84,9 +114,6 @@ function TodaySummary({ meals }: { meals: Meal[] }) {
 			.filter((meal) => normalizeEntryType(meal.entry_type) === "meal")
 			.map((meal) => meal.meal_type),
 	);
-	const waterMl = meals
-		.filter((meal) => normalizeEntryType(meal.entry_type) === "water")
-		.reduce((total, meal) => total + (meal.water_ml ?? 0), 0);
 
 	return (
 		<aside className="hidden flex-col gap-4 lg:sticky lg:top-0 lg:flex">
@@ -117,19 +144,7 @@ function TodaySummary({ meals }: { meals: Meal[] }) {
 					})}
 				</ul>
 			</section>
-			<section className="flex items-center gap-3 rounded-2xl border bg-card p-4 shadow-sm">
-				<div className="flex size-10 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600">
-					<Droplets className="size-5" />
-				</div>
-				<div>
-					<p className="font-medium">
-						{waterMl >= 1000
-							? `${(waterMl / 1000).toFixed(1)} L`
-							: `${waterMl} ml`}
-					</p>
-					<p className="text-muted-foreground text-xs">Agua hoy</p>
-				</div>
-			</section>
+			<WaterGoalProgress waterMl={waterOf(meals)} goalMl={waterGoalMl} />
 			<ExtraSummary
 				stats={getExtraStats({
 					meals: weekMeals ?? [],

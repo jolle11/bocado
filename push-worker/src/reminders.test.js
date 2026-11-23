@@ -21,7 +21,17 @@ test("only becomes due between the configured time and window end", () => {
 	const preference = { enabled: true, time: "09:30", windowEnd: "10:00" };
 	assert.equal(isReminderDue(preference, "09:29"), false);
 	assert.equal(isReminderDue(preference, "09:30"), true);
-	assert.equal(isReminderDue(preference, "10:01"), false);
+	assert.equal(isReminderDue(preference, "10:31"), false);
+});
+
+test("extends the window when the chosen time is past the default end", () => {
+	const preference = { enabled: true, time: "10:30", windowEnd: "10:00" };
+	assert.equal(isReminderDue(preference, "10:30"), true);
+	assert.equal(isReminderDue(preference, "11:30"), true);
+	assert.equal(isReminderDue(preference, "11:31"), false);
+	const late = { enabled: true, time: "23:30", windowEnd: "23:00" };
+	assert.equal(isReminderDue(late, "23:59"), true);
+	assert.equal(isReminderDue({ ...late, enabled: false }, "23:45"), false);
 });
 
 test("only a meal of the matching type suppresses the reminder", () => {

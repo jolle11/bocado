@@ -75,6 +75,29 @@ async function recentMealsByUser(users, now) {
 }
 
 const USERS_PER_MEAL_QUERY = 50;
+const PUSH_TTL_SECONDS = 60 * 60;
+
+async function subscriptionsFor(users) {
+	const result = new Map();
+	for (let i = 0; i < users.length; i += USERS_PER_MEAL_QUERY) {
+		const chunk = users.slice(i, i + USERS_PER_MEAL_QUERY);
+		const params = Object.fromEntries(chunk.map((user, j) => [`u${j}`, user]));
+		const filter = chunk.map((_, j) => `user = {:u${j}}`).join(" || ");
+		const subscriptions = await pb
+			.collection("push_subscriptions")
+			.getFullList({
+				filter: pb.filter(filter, params),
+				fields: "id,user,endpoint,p256dh,auth",
+				batch: 1000,
+			});
+		for (const subscription of subscriptions) {
+			const list = result.get(subscription.user) ?? [];
+			list.push(subscription);
+			result.set(subscription.user, list);
+		}
+	}
+	return result;
+}
 
 async function sendToSubscriptions(subscriptions, payload) {
 	let delivered = false;
@@ -86,11 +109,17 @@ async function sendToSubscriptions(subscriptions, payload) {
 					keys: { p256dh: subscription.p256dh, auth: subscription.auth },
 				},
 				JSON.stringify(payload),
+				// Un recordatorio de desayuno no sirve horas después: que el
+				// servicio push lo descarte si el móvil sigue offline.
+				{ TTL: PUSH_TTL_SECONDS, urgency: "normal" },
 			);
 			delivered = true;
 		} catch (error) {
 			if (error?.statusCode === 404 || error?.statusCode === 410) {
-				await pb.collection("push_subscriptions").delete(subscription.id);
+				await pb
+					.collection("push_subscriptions")
+					.delete(subscription.id)
+					.catch(() => {});
 				console.info(`Removed expired subscription ${subscription.id}`);
 			} else {
 				console.error(`Push failed for subscription ${subscription.id}`, error);
@@ -102,15 +131,17 @@ async function sendToSubscriptions(subscriptions, payload) {
 
 async function tick(now = new Date()) {
 	await authenticate();
-	const [preferenceRecords, subscriptions] = await Promise.all([
-		pb
-			.collection("user_preferences")
-			.getFullList({ fields: "user,preferences" }),
-		pb.collection("push_subscriptions").getFullList(),
-	]);
-	const subscriptionsByUser = Map.groupBy(
-		subscriptions,
-		(subscription) => subscription.user,
+	// Solo usuarios con recordatorios activos; el resto ni se descarga.
+	const preferenceRecords = await pb
+		.collection("user_preferences")
+		.getFullList({
+			filter: "preferences.reminders.enabled = true",
+			fields: "user,preferences",
+			batch: 1000,
+		});
+	if (preferenceRecords.length === 0) return;
+	const subscriptionsByUser = await subscriptionsFor(
+		preferenceRecords.map((record) => record.user),
 	);
 
 	const pending = [];
@@ -207,12 +238,39 @@ async function maybeCleanOrphanPhotos() {
 	}
 }
 
-await run();
-await maybeCleanOrphanPhotos();
-const timer = setInterval(async () => {
+// reminder_deliveries solo sirve para deduplicar el día en curso: borramos
+// lo que tenga más de una semana para que la tabla no crezca sin fin.
+let lastDeliveryCleanup = 0;
+async function maybeCleanDeliveries() {
+	if (Date.now() - lastDeliveryCleanup < CLEANUP_INTERVAL_MS) return;
+	lastDeliveryCleanup = Date.now();
+	try {
+		await authenticate();
+		const before = new Date(Date.now() - 7 * CLEANUP_INTERVAL_MS)
+			.toISOString()
+			.replace("T", " ");
+		const old = await pb.collection("reminder_deliveries").getFullList({
+			filter: pb.filter("created < {:before}", { before }),
+			fields: "id",
+			batch: 1000,
+		});
+		for (const record of old) {
+			await pb.collection("reminder_deliveries").delete(record.id);
+		}
+		if (old.length > 0) console.info(`Deleted ${old.length} old deliveries`);
+	} catch (error) {
+		console.error("Delivery cleanup failed", error);
+	}
+}
+
+async function cycle() {
 	await run();
 	await maybeCleanOrphanPhotos();
-}, intervalMs);
+	await maybeCleanDeliveries();
+}
+
+await cycle();
+const timer = setInterval(cycle, intervalMs);
 for (const signal of ["SIGTERM", "SIGINT"]) {
 	process.on(signal, () => {
 		clearInterval(timer);

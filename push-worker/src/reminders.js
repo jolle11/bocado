@@ -26,12 +26,29 @@ export function localDateTime(date, timeZone) {
 	};
 }
 
+/** Margen mínimo tras la hora elegida para que un tick (cada 5 min) lo pille. */
+export const MIN_WINDOW_MINUTES = 60;
+
+function toMinutes(time) {
+	const [h, m] = String(time).split(":").map(Number);
+	return Number.isInteger(h) && Number.isInteger(m) ? h * 60 + m : null;
+}
+
+/**
+ * El usuario solo edita `time`; `windowEnd` es un valor por defecto. Si la hora
+ * elegida queda pegada o por detrás de `windowEnd`, ampliamos la ventana para
+ * no perder el recordatorio en silencio. Nunca cruza la medianoche.
+ */
 export function isReminderDue(preference, localTime) {
-	return (
-		preference?.enabled === true &&
-		localTime >= preference.time &&
-		localTime <= preference.windowEnd
+	if (preference?.enabled !== true) return false;
+	const start = toMinutes(preference.time);
+	const now = toMinutes(localTime);
+	if (start === null || now === null) return false;
+	const end = Math.min(
+		23 * 60 + 59,
+		Math.max(toMinutes(preference.windowEnd) ?? 0, start + MIN_WINDOW_MINUTES),
 	);
+	return now >= start && now <= end;
 }
 
 export function mealWasRegistered(meals, mealType, localDay, timeZone) {

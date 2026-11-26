@@ -19,6 +19,7 @@ import { Route as AppHistoryRouteImport } from './routes/_app/history'
 import { Route as AppNewRouteImport } from './routes/_app/new'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppWeekRouteImport } from './routes/_app/week'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiUploadthingRouteImport } from './routes/api/uploadthing'
 import { Route as ApiUploadthingFilesRouteImport } from './routes/api/uploadthing-files'
 import { Route as ShareTokenRouteImport } from './routes/share.$token'
@@ -73,6 +74,11 @@ const AppWeekRoute = AppWeekRouteImport.update({
   path: '/week',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiUploadthingRoute = ApiUploadthingRouteImport.update({
   id: '/api/uploadthing',
   path: '/api/uploadthing',
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/new': typeof AppNewRoute
   '/settings': typeof AppSettingsRoute
   '/week': typeof AppWeekRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/uploadthing': typeof ApiUploadthingRoute
   '/api/uploadthing-files': typeof ApiUploadthingFilesRoute
   '/share/$token': typeof ShareTokenRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/new': typeof AppNewRoute
   '/settings': typeof AppSettingsRoute
   '/week': typeof AppWeekRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/uploadthing': typeof ApiUploadthingRoute
   '/api/uploadthing-files': typeof ApiUploadthingFilesRoute
   '/share/$token': typeof ShareTokenRoute
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/_app/new': typeof AppNewRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/week': typeof AppWeekRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/uploadthing': typeof ApiUploadthingRoute
   '/api/uploadthing-files': typeof ApiUploadthingFilesRoute
   '/share/$token': typeof ShareTokenRoute
@@ -153,6 +162,7 @@ export interface FileRouteTypes {
     | '/new'
     | '/settings'
     | '/week'
+    | '/api/health'
     | '/api/uploadthing'
     | '/api/uploadthing-files'
     | '/share/$token'
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/new'
     | '/settings'
     | '/week'
+    | '/api/health'
     | '/api/uploadthing'
     | '/api/uploadthing-files'
     | '/share/$token'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/_app/new'
     | '/_app/settings'
     | '/_app/week'
+    | '/api/health'
     | '/api/uploadthing'
     | '/api/uploadthing-files'
     | '/share/$token'
@@ -195,6 +207,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  ApiHealthRoute: typeof ApiHealthRoute
   ApiUploadthingRoute: typeof ApiUploadthingRoute
   ApiUploadthingFilesRoute: typeof ApiUploadthingFilesRoute
   ShareTokenRoute: typeof ShareTokenRoute
@@ -272,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWeekRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/uploadthing': {
       id: '/api/uploadthing'
       path: '/api/uploadthing'
@@ -330,6 +350,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  ApiHealthRoute: ApiHealthRoute,
   ApiUploadthingRoute: ApiUploadthingRoute,
   ApiUploadthingFilesRoute: ApiUploadthingFilesRoute,
   ShareTokenRoute: ShareTokenRoute,
